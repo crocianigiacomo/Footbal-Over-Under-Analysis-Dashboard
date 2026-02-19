@@ -215,7 +215,7 @@ class StatsQuery:
                 SELECT 
                     lega,
                     squadra_casa AS squadra,
-                    CASE WHEN (gol_casa + gol_trasferta) >= 3 THEN 1 ELSE 0 END as is_over,
+                    CASE WHEN (gol_casa + gol_trasferta) <= 3 THEN 1 ELSE 0 END as is_under,
                     1 as partita
                 FROM partite
                 UNION ALL
@@ -223,19 +223,19 @@ class StatsQuery:
                 SELECT 
                     lega,
                     squadra_trasferta AS squadra,
-                    CASE WHEN (gol_casa + gol_trasferta) >= 3 THEN 1 ELSE 0 END as is_over,
+                    CASE WHEN (gol_casa + gol_trasferta) <= 3 THEN 1 ELSE 0 END as is_under,
                     1 as partita
                 FROM partite
             )
             SELECT 
                 lega as "Lega",
                 squadra as "Squadra",
-                SUM(is_over) as "Over 2.5",
+                SUM(is_under) as "Under 3.5",
                 SUM(partita) as "Partite",
-                ROUND(100.0 * SUM(is_over) / SUM(partita), 1) as "% Over"
+                ROUND(100.0 * SUM(is_under) / SUM(partita), 1) as "% Under"
             FROM partite_squadra
             GROUP BY lega, squadra
-            ORDER BY "% Over" ASC
+            ORDER BY "% Under" DESC
             LIMIT ?
         '''
     
@@ -291,7 +291,7 @@ def menu_interattivo():
         print("4. Gol Casa vs Trasferta")
         print("5. Top 20 squadre Over 2.5 (tutte le leghe)")
         print("6. Statistiche Primo Tempo (HT)")
-        print("7. Top 20 squadre Under 2.5 (tutte le leghe)")
+        print("7. Top 20 squadre Under 3.5 (tutte le leghe)")
         print("8. Statistiche gol fatti/gol subiti")
         print("0. Esci")
         
@@ -374,7 +374,7 @@ def menu_interattivo():
         
         elif scelta == "7":
             print("\n" + "="*60)
-            print("TOP 20 SQUADRE UNDER 2.5 (TUTTE LE LEGHE)")
+            print("TOP 20 SQUADRE UNDER 3.5 (TUTTE LE LEGHE)")
             print("="*60)
             print(stats.top_squadre_under_cross_lega(20).to_string(index=False))
         
