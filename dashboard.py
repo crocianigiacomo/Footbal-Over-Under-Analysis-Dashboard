@@ -7,7 +7,7 @@ import query  # Il tuo nuovo file con le stringhe SQL
 #  CONFIG PAGINA
 # ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="Calcio Stats Dashboard",
+    page_title="Interactive Football Dashboard",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -43,11 +43,12 @@ is_mobile = screen_w < 768
 st.markdown("""
 <style>
     .main-title {
-        font-size: 2rem; font-weight: 800;
-        color: #00d4aa; letter-spacing: 1px; margin-bottom: 0.2rem;
+        font-size: 3rem; font-weight: 800;
+        color: #5AB2FA; letter-spacing: 1px; margin-bottom: 0.2rem; text-align: center;
+            font-family: 'Copperplate'; 
     }
     .sub-title {
-        font-size: 0.9rem; color: #8b92a5; margin-bottom: 1.5rem;
+        font-size: 1.25rem; color: #8b92a5; margin-bottom: 1.5rem;font-family: 'Copperplate'; text-align: center;
     }
     .section-title {
         font-size: 1.05rem; font-weight: 700; color: #ffffff;
@@ -92,6 +93,13 @@ st.markdown("""
 
     footer {visibility: hidden;}
     #MainMenu {visibility: hidden;}
+    div[data-baseweb="select"], div[data-baseweb="select"] * {
+        cursor: pointer !important;
+    }
+    div[data-baseweb="select"]:hover {
+        border-color: #00d4aa !important;
+        transition: border-color 0.3s ease;
+    }        
 </style>
 """, unsafe_allow_html=True)
 
@@ -203,26 +211,26 @@ def build_gol_table(df, mobile=False):
     if mobile:
         header_cols = [
             ("srt(0,false)", "",            "Squadra"),
-            ("srt(1,true)",  "#00d4aa",     "GF Casa"),
-            ("srt(2,true)",  "#ff6b6b",     "GS Casa"),
-            ("srt(3,true)",  "#4fc3f7",     "GF Trasf"),
-            ("srt(4,true)",  "#ffa726",     "GS Trasf"),
-            ("srt(5,true)",  "",            "Tot GF"),
-            ("srt(6,true)",  "",            "Tot GS"),
+            ("srt(1,true)",  "#00d4aa",     "Gol Fatti Casa"),
+            ("srt(2,true)",  "#ff6b6b",     "Gol Subiti Casa"),
+            ("srt(3,true)",  "#4fc3f7",     "Gol Fatti Trasf"),
+            ("srt(4,true)",  "#ffa726",     "Gol Subiti Trasf"),
+            ("srt(5,true)",  "",            "Totale Gol Fatti"),
+            ("srt(6,true)",  "",            "Totale Gol Subiti"),
         ]
     else:
         header_cols = [
             ("srt(0,false)", "",            "Squadra"),
-            ("srt(1,true)",  "#00d4aa",     "GF Casa"),
-            ("srt(2,true)",  "#ff6b6b",     "GS Casa"),
-            ("srt(3,true)",  "#00d4aa",     "Media GF Casa"),
-            ("srt(4,true)",  "#ff6b6b",     "Media GS Casa"),
-            ("srt(5,true)",  "#4fc3f7",     "GF Trasf"),
-            ("srt(6,true)",  "#ffa726",     "GS Trasf"),
-            ("srt(7,true)",  "#4fc3f7",     "Media GF Trasf"),
-            ("srt(8,true)",  "#ffa726",     "Media GS Trasf"),
-            ("srt(9,true)",  "",            "Tot GF"),
-            ("srt(10,true)", "",            "Tot GS"),
+            ("srt(1,true)",  "#00d4aa",     "Gol Fatti Casa"),
+            ("srt(2,true)",  "#ff6b6b",     "Gol Subiti Casa"),
+            ("srt(3,true)",  "#00d4aa",     "Media Gol Fatti Casa"),
+            ("srt(4,true)",  "#ff6b6b",     "Media Gol Subiti Casa"),
+            ("srt(5,true)",  "#4fc3f7",     "Gol Fatti Trasferta"),
+            ("srt(6,true)",  "#ffa726",     "Gol Subiti Trasferta"),
+            ("srt(7,true)",  "#4fc3f7",     "Media Gol Fatti Trasferta"),
+            ("srt(8,true)",  "#ffa726",     "Media Gol Subiti Trasferta"),
+            ("srt(9,true)",  "",            "Totale Gol Fatti"),
+            ("srt(10,true)", "",            "Totale Gol Subiti"),
         ]
 
     th_html = ""
@@ -318,7 +326,7 @@ def build_gol_table(df, mobile=False):
 # ──────────────────────────────────────────────
 #  LOGICA UI (Design Mobile/Desktop)
 # ──────────────────────────────────────────────
-st.markdown('<div class="main-title">⚽ Calcio Stats Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">⚽ Interactive Football Dashboard ⚽</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Analisi Over / Under · Gol per squadra e per lega</div>', unsafe_allow_html=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
