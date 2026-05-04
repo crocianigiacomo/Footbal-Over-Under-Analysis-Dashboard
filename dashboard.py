@@ -272,9 +272,9 @@ def build_gol_table(df, mobile=False):
   td {{ padding: {"6px 8px" if mobile else "7px 12px"}; border-bottom: 1px solid #1e2333; text-align: right; }}
   td:first-child {{ text-align: left; }}
   tr:hover td {{ background: #1e2435; }}
-  th:not(.sort-asc):not(.sort-desc)::after {{ content: " \\u21c5"; font-size: 10px; opacity: 0.35; }}
-  .sort-asc::after  {{ content: " \\u25b2"; font-size: 10px; }}
-  .sort-desc::after {{ content: " \\u25bc"; font-size: 10px; }}
+  th:not(.sort-asc):not(.sort-desc)::after {{ content: " "; font-size: 10px; opacity: 0.35; }}
+  .sort-asc::after  {{ content: " "; font-size: 10px; }}
+  .sort-desc::after {{ content: " "; font-size: 10px; }}
   {hide_mob_css}
 </style>
 </head>
