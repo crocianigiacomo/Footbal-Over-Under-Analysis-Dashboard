@@ -65,9 +65,13 @@ def fetch_and_process_league(league_id, season, api_key):
         # Accettiamo solo partite terminate
         if status not in ['FT', 'AET', 'PEN']:
             continue
-            
+        round_name = str(match['league']['round'])    
         home_goals = match['goals']['home']
         away_goals = match['goals']['away']
+        
+        
+        if 'Regular Season' not in round_name:
+            continue
         
         if home_goals is None or away_goals is None:
             continue
@@ -103,8 +107,11 @@ def optimize_and_calculate(df):
     df.loc[df['gol_casa'] > df['gol_trasferta'], 'winner_code'] = 1
     df.loc[df['gol_casa'] < df['gol_trasferta'], 'winner_code'] = 2
     
-    # Assicurati che 'giornata' sia un intero per coerenza col DB
-    df['giornata'] = pd.to_numeric(df['giornata'], errors='coerce').fillna(0).astype(int)
+    # NOVITÀ: Tenta la conversione. Se non è un numero, diventa NaN.
+    df['giornata'] = pd.to_numeric(df['giornata'], errors='coerce')
+    # Rimuove le righe con NaN (le finte giornate) e poi converte in intero
+    df = df.dropna(subset=['giornata'])
+    df['giornata'] = df['giornata'].astype(int)
     
     return df
 
