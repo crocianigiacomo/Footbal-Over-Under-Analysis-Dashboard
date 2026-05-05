@@ -146,8 +146,6 @@ def build_over_table(df):
             f"<td class='num' style='color:#00d4aa;font-weight:700'>{i+1}</td>"
             f"<td>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
-            f"<td class='num'>{int(r['over25'])}</td>"
-            f"<td class='num'>{int(r['partite'])}</td>"
             f"<td>{bar}</td>"
             f"</tr>"
         )
@@ -156,7 +154,7 @@ def build_over_table(df):
         "<table class='cal-table'>"
         "<thead><tr>"
         "<th>#</th><th>Lega</th><th>Squadra</th>"
-        "<th class='num'>Over 2.5</th><th class='num'>Partite</th><th>% Over</th>"
+        "<th>% Over</th>"
         "</tr></thead>"
         f"<tbody>{rows}</tbody>"
         "</table></div>"
