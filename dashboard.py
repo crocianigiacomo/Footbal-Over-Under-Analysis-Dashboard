@@ -171,8 +171,6 @@ def build_under_table(df):
             f"<td class='num' style='color:#ff6b6b;font-weight:700'>{i+1}</td>"
             f"<td>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
-            f"<td class='num'>{int(r['under35'])}</td>"
-            f"<td class='num'>{int(r['partite'])}</td>"
             f"<td>{bar}</td>"
             f"</tr>"
         )
@@ -181,7 +179,7 @@ def build_under_table(df):
         "<table class='cal-table'>"
         "<thead><tr>"
         "<th>#</th><th>Lega</th><th>Squadra</th>"
-        "<th class='num'>Under 3.5</th><th class='num'>Partite</th><th>% Under</th>"
+        "<th>% Under</th>"
         "</tr></thead>"
         f"<tbody>{rows}</tbody>"
         "</table></div>"
