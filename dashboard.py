@@ -14,8 +14,29 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+components.html("""
+<script>
+    var w = window.innerWidth;
+    var params = new URLSearchParams(window.parent.location.search);
+    if (!params.get('sw') || Math.abs(parseInt(params.get('sw')) - w) > 100) {
+        params.set('sw', w);
+        window.parent.history.replaceState({}, '', '?' + params.toString());
+        window.parent.location.reload();
+    }
+</script>
+""", height=0)
+
+screen_w = int(st.query_params.get("sw", 1200))
+is_mobile = screen_w < 768
+
 st.markdown("""
 <style>
+    
+    
+    [data-testid="stVerticalBlock"] > div {
+    gap: 0.5rem !important;
+    }
+            
     /* Spaziature generali */
     .block-container {
         padding-top: 2rem !important;
@@ -55,7 +76,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     
-    .divider { border: none; border-top: 1px solid #282828; margin: 2rem 0; }
+    .divider { border: none; border-top: 1px solid #282828; margin: 1rem 0; }
 
     /* Tabelle Generiche in Streamlit (Over/Under, Calendario, Previsioni) */
     .cal-table {
@@ -351,7 +372,9 @@ lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options
 df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel})
 
 # Calcola altezza Iframe dinamica in base al numero di squadre
-h_iframe =  len(df_gol) * 42 
+multiplier = 32 if is_mobile else 42
+h_iframe = (len(df_gol) * multiplier)
+
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
