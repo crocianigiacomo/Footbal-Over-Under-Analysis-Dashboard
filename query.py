@@ -1,45 +1,41 @@
-# query.py
-
-# Query per le squadre con più Over 2.5
+# TOP OVER GLOBALE (Senza filtro nazione)
 TOP_OVER_SQL = """
     WITH ps AS (
         SELECT lega, squadra_casa AS squadra,
-               CASE WHEN (gol_casa + gol_trasferta) >= 3 THEN 1 ELSE 0 END as ov, 1 as p
+               CASE WHEN (gol_casa + gol_trasferta) > :soglia THEN 1 ELSE 0 END as ov, 1 as p
         FROM partite
         UNION ALL
         SELECT lega, squadra_trasferta,
-               CASE WHEN (gol_casa + gol_trasferta) >= 3 THEN 1 ELSE 0 END, 1
+               CASE WHEN (gol_casa + gol_trasferta) > :soglia THEN 1 ELSE 0 END, 1
         FROM partite
     )
     SELECT lega, squadra,
-           SUM(ov) AS over25, SUM(p) AS partite,
+           SUM(ov) AS n_over, SUM(p) AS partite,
            ROUND(100.0 * SUM(ov) / SUM(p), 1) AS pct
     FROM ps GROUP BY lega, squadra
     ORDER BY pct DESC LIMIT :limit
 """
 
-# Query per le squadre con più Under 3.5
+# TOP UNDER GLOBALE (Senza filtro nazione)
 TOP_UNDER_SQL = """
     WITH ps AS (
         SELECT lega, squadra_casa AS squadra,
-               CASE WHEN (gol_casa + gol_trasferta) < 4 THEN 1 ELSE 0 END as un, 1 as p
+               CASE WHEN (gol_casa + gol_trasferta) <= :soglia THEN 1 ELSE 0 END as un, 1 as p
         FROM partite
         UNION ALL
         SELECT lega, squadra_trasferta,
-               CASE WHEN (gol_casa + gol_trasferta) < 4 THEN 1 ELSE 0 END, 1
+               CASE WHEN (gol_casa + gol_trasferta) <= :soglia THEN 1 ELSE 0 END, 1
         FROM partite
     )
     SELECT lega, squadra,
-           SUM(un) AS under35, SUM(p) AS partite,
+           SUM(un) AS n_under, SUM(p) AS partite,
            ROUND(100.0 * SUM(un) / SUM(p), 1) AS pct
     FROM ps GROUP BY lega, squadra
     ORDER BY pct DESC LIMIT :limit
 """
 
-# Query per ottenere la lista delle leghe disponibili
 LISTA_LEGHE_SQL = "SELECT DISTINCT lega FROM partite ORDER BY lega"
 
-# Query dettagliata gol fatti/subiti per lega
 GOL_LEGA_SQL = """
     WITH casa AS (
         SELECT squadra_casa AS squadra,
@@ -60,10 +56,27 @@ GOL_LEGA_SQL = """
     FROM casa c JOIN trasf t ON c.squadra = t.squadra
     ORDER BY totgf DESC
 """
-# Query per il calendario di una lega
+
 CALENDARIO_LEGA_SQL = """
     SELECT giornata, squadra_casa, squadra_trasferta, data_ora 
     FROM calendario 
     WHERE lega = :lega 
     ORDER BY giornata ASC, data_ora ASC
+"""
+
+TEAM_STRENGTH_SQL = """
+    WITH league_avg AS (
+        SELECT AVG(gol_casa) as avg_gfc_league, AVG(gol_trasferta) as avg_gft_league
+        FROM partite WHERE lega = :lega
+    ),
+    team_stats AS (
+        SELECT squadra_casa as squadra, AVG(gol_casa) as avg_gfc, AVG(gol_trasferta) as avg_gsc
+        FROM partite WHERE lega = :lega GROUP BY squadra_casa
+    ),
+    away_stats AS (
+        SELECT squadra_trasferta as squadra, AVG(gol_trasferta) as avg_gft, AVG(gol_casa) as avg_gst
+        FROM partite WHERE lega = :lega GROUP BY squadra_trasferta
+    )
+    SELECT t.squadra, t.avg_gfc, t.avg_gsc, a.avg_gft, a.avg_gst, l.avg_gfc_league, l.avg_gft_league
+    FROM team_stats t JOIN away_stats a ON t.squadra = a.squadra CROSS JOIN league_avg l
 """
