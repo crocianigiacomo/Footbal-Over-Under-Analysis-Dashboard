@@ -143,7 +143,6 @@ def build_over_table(df):
         bar   = pct_bar(pct, color)
         rows += (
             f"<tr>"
-            f"<td class='num' style='color:#00d4aa;font-weight:700'>{i+1}</td>"
             f"<td>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
             f"<td>{bar}</td>"
@@ -153,7 +152,7 @@ def build_over_table(df):
         "<div class='tbl-scroll'>"
         "<table class='cal-table'>"
         "<thead><tr>"
-        "<th>#</th><th>Lega</th><th>Squadra</th>"
+        "<th>Lega</th><th>Squadra</th>"
         "<th>% Over</th>"
         "</tr></thead>"
         f"<tbody>{rows}</tbody>"
@@ -167,8 +166,7 @@ def build_under_table(df):
         color = "#ff6b6b" if pct >= 70 else "#ffa726" if pct >= 55 else "#9e9e9e"
         bar   = pct_bar(pct, color)
         rows += (
-            f"<tr>"
-            f"<td class='num' style='color:#ff6b6b;font-weight:700'>{i+1}</td>"
+            f"<tr>" 
             f"<td>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
             f"<td>{bar}</td>"
@@ -178,7 +176,7 @@ def build_under_table(df):
         "<div class='tbl-scroll'>"
         "<table class='cal-table'>"
         "<thead><tr>"
-        "<th>#</th><th>Lega</th><th>Squadra</th>"
+        "<th>Lega</th><th>Squadra</th>"
         "<th>% Under</th>"
         "</tr></thead>"
         f"<tbody>{rows}</tbody>"
