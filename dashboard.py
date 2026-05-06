@@ -106,10 +106,22 @@ st.markdown("""
     
     .num { text-align: center !important; }
     
-    .pct-wrap { display: flex; align-items: center; gap: 8px; }
-    .pct-bar  { height: 6px; border-radius: 3px; flex-shrink: 0; }
-    .pct-val  { font-weight: 600; font-size: 0.8rem; }
+    /* Contenitore tabelle */
     .tbl-scroll { border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+    /* Nuove Percentuali Responsive */
+    .pct-wrap { display: flex; align-items: center; gap: 6px; }
+    .pct-track { width: 80px; background: #282828; height: 6px; border-radius: 3px; flex-shrink: 0; }
+    
+    /* FIX MOBILE */
+    @media screen and (max-width: 768px) {
+        .hide-mob { display: none !important; }
+        .cal-table td, .cal-table th { 
+            padding: 6px 4px !important; 
+            font-size: 11px !important;
+        }
+        .pct-track { width: 40px !important; } 
+    }
 
     footer, #MainMenu {visibility: hidden;}
     
@@ -132,9 +144,14 @@ def query_leghe():
 # ──────────────────────────────────────────────
 #  HELPERS HTML (GENERATORI TABELLE)
 # ──────────────────────────────────────────────
-def pct_bar(value, color):
-    w = int(min(value, 100))
-    return f'<div class="pct-wrap"><div class="pct-bar" style="width:{w}px;background:{color}"></div><span class="pct-val" style="color:{color};font-weight:600;font-size:0.75rem">{value}%</span></div>'
+def pct_bar(value, color, nascondi_barra_mobile=False):
+    track_class = "pct-track hide-mob" if nascondi_barra_mobile else "pct-track"
+    return (
+        f'<div class="pct-wrap">'
+        f'<div class="{track_class}"><div style="width:{value}%; background:{color}; height:100%; border-radius:3px;"></div></div>'
+        f'<span style="color:{color};font-weight:600;font-size:0.75rem">{value}%</span>'
+        f'</div>'
+    )
 
 def build_stats_table(df, tipo, soglia):
     rows = ""
@@ -206,7 +223,7 @@ def build_prediction_table(df):
             f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</td>"
             f"<td class='num hide-mob'><b>{r['Gol Attesi Totali']}</b></td>"
             f"<td><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
-            f"<td>{pct_bar(r['Prob %'], c)}</td>"
+            f"<td>{pct_bar(r['Prob %'], c, nascondi_barra_mobile=True)}</td>"
             f"</tr>"
         )
     return (
