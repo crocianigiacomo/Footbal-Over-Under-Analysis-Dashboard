@@ -195,25 +195,30 @@ def build_calendario(df):
         "</tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
-
 def build_prediction_table(df):
     rows = ""
     for i, r in df.iterrows():
-        color = r["Colore"]
+        c = r["Colore"]
         rows += (
             f"<tr>"
             f"<td><b>{r['Partita']}</b></td>"
-            f"<td class='num hide-mob'>{r['Gol Attesi Casa']}</b></td>"
-            f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</b></td>"
-            f"<td class='num hide-mob'>{r['Gol Attesi Totali']}</b></td>"
-            f"<td><span style='font-size:0.85rem; font-weight:bold; color:{color}; padding:2px 6px; background:#282828; border-radius:4px;'>{r['Esito']}</span></td>"
-            f"<td>{pct_bar(r['Prob %'], color)}</td>"
+            f"<td class='num hide-mob'>{r['Gol Attesi Casa']}</td>"
+            f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</td>"
+            f"<td class='num hide-mob'><b>{r['Gol Attesi Totali']}</b></td>"
+            f"<td><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
+            f"<td>{pct_bar(r['Prob %'], c)}</td>"
             f"</tr>"
         )
-        
     return (
         "<div class='tbl-scroll'><table class='cal-table'>"
-        "<thead><tr><th>Match</th><th class='hide-mob'>Gol Attesi Casa</th><th class='hide-mob'>Gol Attesi Trasferta</th><th class='hide-mob'>Gol Attesi Totali</th><th>Consiglio</th><th>Affidabilità Modello</th></tr></thead>"
+        "<thead><tr>"
+        "<th>Match</th>"
+        "<th class='num hide-mob'>xG Casa</th>"
+        "<th class='num hide-mob'>xG Trasf</th>"
+        "<th class='num hide-mob'>xG Tot</th>"
+        "<th>Consiglio</th>"
+        "<th>Affidabilità</th>"
+        "</tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -322,34 +327,6 @@ def dixon_coles_correction(h, a, exp_h, exp_a, rho=-0.15):
     elif h == 1 and a == 0: return 1 + (exp_a * rho)
     elif h == 1 and a == 1: return 1 - rho
     else: return 1.0
-
-def build_prediction_table(df):
-    """Genera la tabella HTML per le previsioni con le nuove colonne xG Casa/Trasferta."""
-    rows = ""
-    for i, r in df.iterrows():
-        c = r["Colore"]
-        rows += (
-            f"<tr>"
-            f"<td><b>{r['Partita']}</b></td>"
-            f"<td class='num'>{r['Gol Attesi Casa']}</td>"
-            f"<td class='num'>{r['Gol Attesi Trasferta']}</td>"
-            f"<td class='num'><b>{r['Gol Attesi Totali']}</b></td>"
-            f"<td><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
-            f"<td>{pct_bar(r['Prob %'], c)}</td>"
-            f"</tr>"
-        )
-    return (
-        "<div class='tbl-scroll'><table class='cal-table'>"
-        "<thead><tr>"
-        "<th>Match</th>"
-        "<th class='num'>xG Casa</th>"
-        "<th class='num'>xG Trasf</th>"
-        "<th class='num'>xG Tot</th>"
-        "<th>Consiglio</th>"
-        "<th>Affidabilità</th>"
-        "</tr></thead>"
-        f"<tbody>{rows}</tbody></table></div>"
-    )
     
 def get_predictions_section(lega, soglia):
     df_s = conn.query(query.TEAM_STRENGTH_SQL, params={"lega": lega})
