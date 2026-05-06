@@ -27,6 +27,18 @@ def init_database(db_path='calcio.db'):
             UNIQUE(lega, giornata, squadra_casa, squadra_trasferta)
         )
     ''')
+    # NUOVA TABELLA per le partite future
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS calendario (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lega TEXT NOT NULL,
+            giornata INTEGER NOT NULL,
+            squadra_casa TEXT NOT NULL,
+            squadra_trasferta TEXT NOT NULL,
+            data_ora TEXT,
+            UNIQUE(lega, giornata, squadra_casa, squadra_trasferta)
+        )
+    ''')
     
     # Creazione indici per velocizzare la dashboard
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_lega ON partite(lega)')
@@ -53,23 +65,33 @@ def fetch_and_process_league(league_code, api_key):
             
         data = response.json()
         matches = data.get('matches', [])
-        
-        processed_data = []
+        risultati = []
+        futuribili = []
+      
         for match in matches:
-            if match['status'] != 'FINISHED':
-                continue
-                
-            processed_data.append({
-                'lega': data['competition']['name'],
-                'giornata': match['matchday'],
-                'squadra_casa': match['homeTeam']['shortName'] or match['homeTeam']['name'],
-                'squadra_trasferta': match['awayTeam']['shortName'] or match['awayTeam']['name'],
-                'gol_casa': match['score']['fullTime']['home'],
-                'gol_trasferta': match['score']['fullTime']['away'],
-                'gol_casa_1t': match['score']['halfTime']['home'],
-                'gol_trasferta_1t': match['score']['halfTime']['away']
+            # LOGICA PER RISULTATI (Partite finite)
+            if match['status'] == 'FINISHED':
+                risultati.append({
+                    'lega': data['competition']['name'],
+                    'giornata': match['matchday'],
+                    'squadra_casa': match['homeTeam']['shortName'] or match['homeTeam']['name'],
+                    'squadra_trasferta': match['awayTeam']['shortName'] or match['awayTeam']['name'],
+                    'gol_casa': match['score']['fullTime']['home'],
+                    'gol_trasferta': match['score']['fullTime']['away'],
+                    'gol_casa_1t': match['score']['halfTime']['home'],
+                    'gol_trasferta_1t': match['score']['halfTime']['away']
             })
-        return pd.DataFrame(processed_data)
+
+            # LOGICA PER CALENDARIO (Partite future)
+            elif match['status'] in ['SCHEDULED', 'TIMED']:
+                futuribili.append({
+                    'lega': data['competition']['name'],
+                    'giornata': match['matchday'],
+                    'squadra_casa': match['homeTeam']['shortName'] or match['homeTeam']['name'],
+                    'squadra_trasferta': match['awayTeam']['shortName'] or match['awayTeam']['name'],
+                    'data_ora': match['utcDate']
+            })
+        return pd.DataFrame(risultati), pd.DataFrame(futuribili)
     except Exception as e:
         print(f"❌ Errore durante la chiamata: {e}")
         return pd.DataFrame()
@@ -114,6 +136,24 @@ def save_to_sqlite(df, conn):
     except Exception as e:
         print(f"❌ Errore DB: {e}")
 
+def save_calendario_to_sqlite(df, conn):
+    """Salva le partite future nella tabella calendario."""
+    if df.empty: return
+    
+    colonne = ['lega', 'giornata', 'squadra_casa', 'squadra_trasferta', 'data_ora']
+    data_to_insert = list(df[colonne].itertuples(index=False, name=None))
+    cursor = conn.cursor()
+    
+    try:
+        cursor.executemany(f'''
+            INSERT OR REPLACE INTO calendario ({", ".join(colonne)})
+            VALUES ({", ".join(["?" for _ in colonne])})
+        ''', data_to_insert)
+        conn.commit()
+        print(f"📅 Inserite/Aggiornate {len(data_to_insert)} partite nel calendario.")
+    except Exception as e:
+        print(f"❌ Errore DB Calendario: {e}")
+
 if __name__ == "__main__":
     API_KEY = "c4bdfa76ae97456daa5038d8f85f8f59"
     # SA=SerieA, PD=LaLiga, BL1=Bundesliga, FL1=Ligue1, PPL=LigaPortugal, DED=Eredivisie
@@ -123,10 +163,14 @@ if __name__ == "__main__":
     connection = init_database('calcio.db')
     
     for code in LEAGUES:
-        df_raw = fetch_and_process_league(code, API_KEY)
-        if not df_raw.empty:
-            df_clean = optimize_and_calculate(df_raw)
+        df_risultati, df_calendario = fetch_and_process_league(code, API_KEY)
+        
+        if not df_risultati.empty:
+            df_clean = optimize_and_calculate(df_risultati)
             save_to_sqlite(df_clean, connection)
+            
+        if not df_calendario.empty:
+            save_calendario_to_sqlite(df_calendario, connection)
         
         time.sleep(6.5) # Rispetta il limite di 10 chiamate/min
         

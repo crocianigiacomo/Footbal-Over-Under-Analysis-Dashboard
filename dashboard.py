@@ -85,7 +85,7 @@ st.markdown("""
         white-space: nowrap;
     }
     .cal-table tr:hover td { background: #1e2435; }
-    .cal-table .num { text-align: right; }
+    .cal-table .num { text-align: center; }
     .pct-wrap { display: flex; align-items: center; gap: 6px; }
     .pct-bar  { height: 6px; border-radius: 3px; flex-shrink: 0; }
     .pct-val  { font-weight: 600; font-size: 0.8rem; }
@@ -180,6 +180,37 @@ def build_under_table(df):
         "<thead><tr>"
         "<th>#</th><th>Lega</th><th>Squadra</th>"
         "<th>% Under</th>"
+        "</tr></thead>"
+        f"<tbody>{rows}</tbody>"
+        "</table></div>"
+    )
+
+def build_calendario(df):
+    """Genera la tabella HTML per le prossime partite con stili coerenti."""
+    rows = ""
+    for _, r in df.iterrows():
+        # Formattazione data: da '2024-05-15T18:00:00Z' a '15/05 18:00'
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(r['data_ora'], '%Y-%m-%dT%H:%M:%SZ')
+            data_formattata = dt.strftime('%d/%m %H:%M')
+        except:
+            data_formattata = r['data_ora'] # Fallback in caso di errore
+
+        rows += (
+            f"<tr>"
+            f"<td class='num' style='color:#4fc3f7; font-weight:700'>{r['giornata']}</td>"
+            f"<td><b>{r['squadra_casa']}</b></td>"
+            f"<td><b>{r['squadra_trasferta']}</b></td>"
+            f"<td style='color:#8b92a5; font-size:1rem'>{data_formattata}</td>"
+            f"</tr>"
+        )
+        
+    return (
+        "<div class='tbl-scroll'>"
+        "<table class='cal-table'>"
+        "<thead><tr>"
+        "<th class='num'>Giornata</th><th>Casa</th><th>Trasferta</th><th>Data (UTC)</th>"
         "</tr></thead>"
         f"<tbody>{rows}</tbody>"
         "</table></div>"
@@ -353,12 +384,43 @@ lega_sel = st.selectbox("Seleziona lega", options=leghe, label_visibility="colla
 df_gol = query_gol_lega(lega_sel)
 
 # altezza iframe = header + righe (niente scroll interno)
-iframe_h = 55 + len(df_gol) * (34 if is_mobile else 37)
+iframe_h = 40 + len(df_gol) * (30 if is_mobile else 32)
 components.html(build_gol_table(df_gol, mobile=is_mobile), height=iframe_h, scrolling=False)
 
 st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+# ──────────────────────────────────────────────
+#  CALENDARIO PROSSIME PARTITE
+# ──────────────────────────────────────────────
+st.markdown('<div class="section-title-blue">📅 Prossime Partite</div>', unsafe_allow_html=True)
+
+# Selectbox dedicata per il calendario (usa query_leghe per caricare i nomi)
+leghe_disponibili = query_leghe()
+lega_cal_sel = st.selectbox(
+    "Seleziona lega per il calendario", 
+    options=leghe_disponibili, 
+    key="cal_box", 
+    label_visibility="collapsed"
+)
+
+# Esecuzione query per il calendario
+df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal_sel})
+
+if not df_next.empty:
+    # Identifichiamo la prossima giornata disponibile
+    prossima_g = df_next['giornata'].min()
+       
+    # Filtriamo i dati e generiamo la tabella stilizzata
+    df_filtered = df_next[df_next['giornata'] == prossima_g]
+    st.markdown(build_calendario(df_filtered), unsafe_allow_html=True)
+else:
+    st.info("Nessuna partita in programma nel calendario per questa lega.")
+
+st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+# ──────────────────────────────────────────────
+#  FOOTER
+# ──────────────────────────────────────────────
 st.markdown(
     "<div style='text-align:center;color:#3d4460;font-size:0.75rem'>"
-    "Play Responsibily</div>",
+    "Dashboard Ottimizzata · query.py + st.connection</div>",
     unsafe_allow_html=True,
 )

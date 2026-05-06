@@ -60,3 +60,10 @@ GOL_LEGA_SQL = """
     FROM casa c JOIN trasf t ON c.squadra = t.squadra
     ORDER BY totgf DESC
 """
+# Query per il calendario di una lega
+CALENDARIO_LEGA_SQL = """
+    SELECT giornata, squadra_casa, squadra_trasferta, data_ora 
+    FROM calendario 
+    WHERE lega = :lega 
+    ORDER BY giornata ASC, data_ora ASC
+"""
