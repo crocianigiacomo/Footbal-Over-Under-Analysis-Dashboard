@@ -168,24 +168,31 @@ def build_stats_table(df, tipo, soglia):
 def build_calendario(df):
     rows = ""
     for _, r in df.iterrows():
+        dt = r['data_ora']
         try:
-            dt = datetime.strptime(r['data_ora'], '%Y-%m-%dT%H:%M:%SZ')
-            data_fmt = dt.strftime('%d/%m %H:%M')
+            data_fmt = dt.strftime('%d/%m - %H:%M')
         except:
-            data_fmt = r['data_ora']
+            data_fmt = str(dt)[:16]
 
         rows += (
             f"<tr>"
             f"<td class='num' style='color:#5865F2; font-weight:700'>{r['giornata']}</td>"
-            f"<td><b>{r['squadra_casa']}</b></td>"
-            f"<td><b>{r['squadra_trasferta']}</b></td>"
+            f"<td style='text-align: center;'><b>{r['squadra_casa']}</b></td>"
+            f"<td style='text-align: center;'>-</td>"
+            f"<td style='text-align: center;'><b>{r['squadra_trasferta']}</b></td>"
             f"<td style='color:#8e9297;'>{data_fmt}</td>"
             f"</tr>"
         )
         
     return (
         "<div class='tbl-scroll'><table class='cal-table'>"
-        "<thead><tr><th class='num'>G.</th><th>Casa</th><th>Trasferta</th><th>Data (UTC)</th></tr></thead>"
+        "<thead><tr>"
+        "<th class='num'>G.</th>"
+        "<th style='text-align: center;'>Casa</th>"
+        "<th style='text-align: center;'>VS</th>"
+        "<th style='text-align: center;'>Trasferta</th>"
+        "<th>Data (UTC)</th>"
+        "</tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -321,7 +328,9 @@ def get_predictions_section(lega, soglia):
         st.info("Nessun match futuro trovato in calendario.")
         return
 
-    prossima_g = df_next['giornata'].min()
+    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
+    prossima_g = df_next.sort_values('data_ora').iloc[0]['giornata']
+    
     matches = df_next[df_next['giornata'] == prossima_g]
     st.write(f"#### 📅 Turno in analisi: Giornata {prossima_g}")
     
@@ -400,7 +409,8 @@ lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
 df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal})
 
 if not df_next.empty:
-    prossima_g_cal = df_next['giornata'].min()
+    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
+    prossima_g_cal = df_next.sort_values('data_ora').iloc[0]['giornata']
     st.write(f"#### Giornata {prossima_g_cal}")
     st.markdown(build_calendario(df_next[df_next['giornata'] == prossima_g_cal]), unsafe_allow_html=True)
 else:
