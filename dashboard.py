@@ -10,7 +10,6 @@ import query
 # ──────────────────────────────────────────────
 st.set_page_config(
     page_title="XG Football Analytics",
-    page_icon="⚽",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -19,7 +18,7 @@ st.markdown("""
 <style>
     /* Spaziature generali */
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 2rem !important;
         padding-bottom: 2rem !important;
     }
     
@@ -122,7 +121,6 @@ def build_stats_table(df, tipo, soglia):
             
         rows += (
             f"<tr>"
-            f"<td class='num'>{i+1}</td>"
             f"<td>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
             f"<td class='num'>{int(r[val_col])} / {int(r['partite'])}</td>"
@@ -133,7 +131,7 @@ def build_stats_table(df, tipo, soglia):
     th_label = f"% {tipo.capitalize()} {soglia}"
     return (
         f"<div class='tbl-scroll'><table class='cal-table'>"
-        f"<thead><tr><th class='num'>#</th><th>Lega</th><th>Squadra</th><th class='num'>Esiti</th><th>{th_label}</th></tr></thead>"
+        f"<thead><tr><th>Lega</th><th>Squadra</th><th class='num'>Esiti</th><th>{th_label}</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -168,7 +166,6 @@ def build_prediction_table(df):
         rows += (
             f"<tr>"
             f"<td><b>{r['Partita']}</b></td>"
-            f"<td class='num'>{r['Tot. Attesi']}</td>"
             f"<td><span style='font-size:0.85rem; font-weight:bold; color:{color}; padding:2px 6px; background:#282828; border-radius:4px;'>{r['Esito']}</span></td>"
             f"<td>{pct_bar(r['Prob %'], color)}</td>"
             f"</tr>"
@@ -176,7 +173,7 @@ def build_prediction_table(df):
         
     return (
         "<div class='tbl-scroll'><table class='cal-table'>"
-        "<thead><tr><th>Match</th><th class='num'>xG Totali</th><th>Consiglio</th><th>Affidabilità Modello</th></tr></thead>"
+        "<thead><tr><th>Match</th><th>Consiglio</th><th>Affidabilità Modello</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -334,7 +331,7 @@ st.markdown('<div class="sub-title">Advanced Data & Predictions System</div>', u
 leghe_disp = query_leghe()
 
 # --- SEZIONE 1: STATISTICHE GLOBALI (Senza filtro lega) ---
-st.markdown('<div class="section-title">📊 Top Statistiche Globali (Tutte le Leghe)</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">📊 Top Statistiche Globali</div>', unsafe_allow_html=True)
 soglia_stats = st.segmented_control("Seleziona Soglia Gol:", [2.5, 3.5], default=2.5, key="stats_soglia")
 
 c1, c2 = st.columns(2, gap="large")
@@ -354,7 +351,7 @@ lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options
 df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel})
 
 # Calcola altezza Iframe dinamica in base al numero di squadre
-h_iframe = 70 + len(df_gol) * 42 
+h_iframe =  len(df_gol) * 42 
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
@@ -376,7 +373,7 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 
 # --- SEZIONE 4: PREVISIONI ALGORITMICHE (Poisson) ---
-st.markdown('<div class="section-title-red">🔮 Previsioni Algoritmiche (Modello Poisson)</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title-red">🔮 Previsioni Algoritmiche</div>', unsafe_allow_html=True)
 
 c_p1, c_p2 = st.columns([2, 1])
 with c_p1: 
