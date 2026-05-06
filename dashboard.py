@@ -352,7 +352,7 @@ def build_gol_table(df, mobile=False):
 #  LOGICA UI (Design Mobile/Desktop)
 # ──────────────────────────────────────────────
 st.markdown('<div class="main-title">⚽ Interactive Football Dashboard ⚽</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Analisi Over / Under · Gol per squadra e per lega</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Under/Over Analysis</div>', unsafe_allow_html=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 if is_mobile:
