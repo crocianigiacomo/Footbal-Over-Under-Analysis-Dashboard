@@ -139,7 +139,7 @@ def build_over_table(df):
     rows = ""
     for i, r in df.iterrows():
         pct   = r["pct"]
-        color = "#00d4aa" if pct >= 70 else "#f0a500" if pct >= 55 else "#9e9e9e"
+        color = "#00d4aa" if pct >= 80 else "#f0a500" if pct >= 70 else "#9e9e9e"
         bar   = pct_bar(pct, color)
         rows += (
             f"<tr>"
@@ -163,7 +163,7 @@ def build_under_table(df):
     rows = ""
     for i, r in df.iterrows():
         pct   = r["pct"]
-        color = "#ff6b6b" if pct >= 70 else "#ffa726" if pct >= 55 else "#9e9e9e"
+        color = "#ff6b6b" if pct >= 80 else "#ffa726" if pct >= 70 else "#9e9e9e"
         bar   = pct_bar(pct, color)
         rows += (
             f"<tr>" 
