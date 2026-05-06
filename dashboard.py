@@ -419,6 +419,6 @@ st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 # ──────────────────────────────────────────────
 st.markdown(
     "<div style='text-align:center;color:#3d4460;font-size:0.75rem'>"
-    "Dashboard Ottimizzata · query.py + st.connection</div>",
+    "Play Responsibily - We are Not responsable of any losses</div>",
     unsafe_allow_html=True,
 )
