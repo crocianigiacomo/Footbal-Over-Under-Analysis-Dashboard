@@ -91,7 +91,15 @@ st.markdown("""
     }
     .cal-table td {
         padding: 8px 12px; border-bottom: 1px solid #2f3136;
-        white-space: nowrap;
+        white-space: normal;
+    }
+    @media screen and (max-width: 768px) {
+        .hide-mob { display: none !important; }
+        .cal-table td, .cal-table th { 
+            padding: 6px 4px !important; 
+            font-size: 11px !important;
+        }
+        .pct-bar { width: 40px !important; }
     }
     .cal-table tr:last-child td { border-bottom: none; }
     .cal-table tr:hover td { background: #2f3136; transition: background 0.2s; }
@@ -125,8 +133,8 @@ def query_leghe():
 #  HELPERS HTML (GENERATORI TABELLE)
 # ──────────────────────────────────────────────
 def pct_bar(value, color):
-    w = int(min(value, 100))
-    return f'<div class="pct-wrap"><div class="pct-bar" style="width:{w}px;background:{color}"></div><span class="pct-val" style="color:{color}">{value}%</span></div>'
+    w = int(min(value, 80))
+    return f'<div class="pct-wrap"><div class="pct-bar" style="width:{w}px;background:{color}"></div><span class="pct-val" style="color:{color};font-weight:600;font-size:0.75rem">{value}%</span></div>'
 
 def build_stats_table(df, tipo, soglia):
     rows = ""
@@ -142,7 +150,8 @@ def build_stats_table(df, tipo, soglia):
             
         rows += (
             f"<tr>"
-            f"<td>{r['lega']}</td>"
+            f"<td class='num hide-mob'>{i+1}</td>"
+            f"<td class='hide-mob'>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
             f"<td class='num'>{int(r[val_col])} / {int(r['partite'])}</td>"
             f"<td>{pct_bar(pct, color)}</td>"
@@ -152,7 +161,7 @@ def build_stats_table(df, tipo, soglia):
     th_label = f"% {tipo.capitalize()} {soglia}"
     return (
         f"<div class='tbl-scroll'><table class='cal-table'>"
-        f"<thead><tr><th>Lega</th><th>Squadra</th><th class='num'>Esiti</th><th>{th_label}</th></tr></thead>"
+        f"<thead><tr><th class='num hide-mob'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th class='num'>Esiti</th><th>{th_label}</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -187,6 +196,9 @@ def build_prediction_table(df):
         rows += (
             f"<tr>"
             f"<td><b>{r['Partita']}</b></td>"
+            f"<td><b>{r['Gol Attesi Casa']}</b></td>"
+            f"<td><b>{r['Gol Attesi Trasferta']}</b></td>"
+            f"<td><b>{r['Gol Attesi Totali']}</b></td>"
             f"<td><span style='font-size:0.85rem; font-weight:bold; color:{color}; padding:2px 6px; background:#282828; border-radius:4px;'>{r['Esito']}</span></td>"
             f"<td>{pct_bar(r['Prob %'], color)}</td>"
             f"</tr>"
@@ -194,7 +206,7 @@ def build_prediction_table(df):
         
     return (
         "<div class='tbl-scroll'><table class='cal-table'>"
-        "<thead><tr><th>Match</th><th>Consiglio</th><th>Affidabilità Modello</th></tr></thead>"
+        "<thead><tr><th>Match</th><th class='hide-mob'>Gol Attesi Casa</th><th class='hide-mob'>Gol Attesi Trasferta</th><th class='hide-mob'>Gol Attesi Totali</th><th>Consiglio</th><th>Affidabilità Modello</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -333,7 +345,9 @@ def get_predictions_section(lega, soglia):
             
             preds_data.append({
                 "Partita": f"{h} vs {a}", 
-                "Tot. Attesi": round(exp_h + exp_a, 2), 
+                "Gol Attesi Casa": round(exp_h, 2), 
+                "Gol Attesi Trasferta": round(exp_a, 2),
+                "Gol Attesi Totali": round(exp_h + exp_a, 2), 
                 "Esito": label, 
                 "Prob %": prob, 
                 "Colore": color
