@@ -196,9 +196,9 @@ def build_prediction_table(df):
         rows += (
             f"<tr>"
             f"<td><b>{r['Partita']}</b></td>"
-            f"<td><b>{r['Gol Attesi Casa']}</b></td>"
-            f"<td><b>{r['Gol Attesi Trasferta']}</b></td>"
-            f"<td><b>{r['Gol Attesi Totali']}</b></td>"
+            f"<td class='num hide-mob'>{r['Gol Attesi Casa']}</b></td>"
+            f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</b></td>"
+            f"<td class='num hide-mob'>{r['Gol Attesi Totali']}</b></td>"
             f"<td><span style='font-size:0.85rem; font-weight:bold; color:{color}; padding:2px 6px; background:#282828; border-radius:4px;'>{r['Esito']}</span></td>"
             f"<td>{pct_bar(r['Prob %'], color)}</td>"
             f"</tr>"
