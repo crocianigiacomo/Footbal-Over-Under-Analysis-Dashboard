@@ -42,9 +42,17 @@ is_mobile = screen_w < 768
 # ──────────────────────────────────────────────
 st.markdown("""
 <style>
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
+    }
+    [data-testid="stHtmlBlock"] {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
     .main-title {
         font-size: 3rem; font-weight: 800;
-        color: #5AB2FA; letter-spacing: 1px; margin-bottom: 0.2rem; text-align: center;
+        color: #5AB2FA; letter-spacing: 1px; margin-bottom: 0.2rem; margin-top= 0 !important; text-align: center;
             font-family: 'Copperplate'; 
     }
     .sub-title {
