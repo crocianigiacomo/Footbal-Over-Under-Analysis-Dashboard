@@ -382,7 +382,7 @@ lega_sel = st.selectbox("Seleziona lega", options=leghe, label_visibility="colla
 df_gol = query_gol_lega(lega_sel)
 
 # altezza iframe = header + righe (niente scroll interno)
-iframe_h = 40 + len(df_gol) * (30 if is_mobile else 32)
+iframe_h = 35 + len(df_gol) * (30 if is_mobile else 33)
 components.html(build_gol_table(df_gol, mobile=is_mobile), height=iframe_h, scrolling=False)
 
 st.markdown("<hr class='divider'>", unsafe_allow_html=True)
