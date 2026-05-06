@@ -133,7 +133,7 @@ def query_leghe():
 #  HELPERS HTML (GENERATORI TABELLE)
 # ──────────────────────────────────────────────
 def pct_bar(value, color):
-    w = int(min(value, 80))
+    w = int(min(value, 100))
     return f'<div class="pct-wrap"><div class="pct-bar" style="width:{w}px;background:{color}"></div><span class="pct-val" style="color:{color};font-weight:600;font-size:0.75rem">{value}%</span></div>'
 
 def build_stats_table(df, tipo, soglia):
@@ -144,9 +144,9 @@ def build_stats_table(df, tipo, soglia):
     for i, r in df.iterrows():
         pct = r["pct"]
         if is_over:
-            color = "#1DB954" if pct >= 75 else "#FEE75C" if pct >= 60 else "#9e9e9e"
+            color = "#FFBB00" if pct >= 75 else "#FFD667" if pct >= 60 else "#FFE9AB"
         else:
-            color = "#ED4245" if pct >= 75 else "#FEE75C" if pct >= 60 else "#9e9e9e"
+            color = "#0080FF" if pct >= 75 else "#5AAAFA" if pct >= 60 else "#9ECEFF"
             
         rows += (
             f"<tr>"
@@ -315,43 +315,104 @@ def build_gol_table(df):
 # ──────────────────────────────────────────────
 #  LOGICA PREVISIONI E POISSON
 # ──────────────────────────────────────────────
+def dixon_coles_correction(h, a, exp_h, exp_a, rho=-0.15):
+    """Fattore di correzione per la dipendenza dei gol."""
+    if h == 0 and a == 0: return 1 - (exp_h * exp_a * rho)
+    elif h == 0 and a == 1: return 1 + (exp_h * rho)
+    elif h == 1 and a == 0: return 1 + (exp_a * rho)
+    elif h == 1 and a == 1: return 1 - rho
+    else: return 1.0
+
+def build_prediction_table(df):
+    """Genera la tabella HTML per le previsioni con le nuove colonne xG Casa/Trasferta."""
+    rows = ""
+    for i, r in df.iterrows():
+        c = r["Colore"]
+        rows += (
+            f"<tr>"
+            f"<td><b>{r['Partita']}</b></td>"
+            f"<td class='num'>{r['Gol Attesi Casa']}</td>"
+            f"<td class='num'>{r['Gol Attesi Trasferta']}</td>"
+            f"<td class='num'><b>{r['Gol Attesi Totali']}</b></td>"
+            f"<td><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
+            f"<td>{pct_bar(r['Prob %'], c)}</td>"
+            f"</tr>"
+        )
+    return (
+        "<div class='tbl-scroll'><table class='cal-table'>"
+        "<thead><tr>"
+        "<th>Match</th>"
+        "<th class='num'>xG Casa</th>"
+        "<th class='num'>xG Trasf</th>"
+        "<th class='num'>xG Tot</th>"
+        "<th>Consiglio</th>"
+        "<th>Affidabilità</th>"
+        "</tr></thead>"
+        f"<tbody>{rows}</tbody></table></div>"
+    )
+    
 def get_predictions_section(lega, soglia):
-    df_strength = conn.query(query.TEAM_STRENGTH_SQL, params={"lega": lega})
-    if df_strength.empty: 
+    df_s = conn.query(query.TEAM_STRENGTH_SQL, params={"lega": lega})
+    if df_s.empty: 
         st.warning("Dati storici insufficienti per questa lega.")
         return
         
-    df_strength.set_index('squadra', inplace=True)
+    df_s.set_index('squadra', inplace=True)
     
-    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega})
-    if df_next.empty:
+    df_n = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega})
+    if df_n.empty:
         st.info("Nessun match futuro trovato in calendario.")
         return
 
-    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
-    prossima_g = df_next.sort_values('data_ora').iloc[0]['giornata']
+    # Trova la prossima giornata cronologica
+    df_n['data_ora'] = pd.to_datetime(df_n['data_ora'])
+    prox = df_n.sort_values('data_ora').iloc[0]['giornata']
+    matches = df_n[df_n['giornata'] == prox]
     
-    matches = df_next[df_next['giornata'] == prossima_g]
-    st.write(f"#### 📅 Turno in analisi: Giornata {prossima_g}")
+    st.write(f"#### 📅 Turno in analisi: Giornata {prox}")
     
     preds_data = []
     for _, m in matches.iterrows():
         h, a = m['squadra_casa'], m['squadra_trasferta']
-        if h in df_strength.index and a in df_strength.index:
+        if h in df_s.index and a in df_s.index:
             # Calcolo xG (Expected Goals)
-            exp_h = (df_strength.loc[h, 'avg_gfc'] * df_strength.loc[a, 'avg_gst']) / df_strength.loc[h, 'avg_gfc_league']
-            exp_a = (df_strength.loc[a, 'avg_gft'] * df_strength.loc[h, 'avg_gsc']) / df_strength.loc[h, 'avg_gft_league']
+            exp_h = (df_s.loc[h, 'avg_gfc'] * df_s.loc[a, 'avg_gst']) / df_s.loc[h, 'avg_gfc_league']
+            exp_a = (df_s.loc[a, 'avg_gft'] * df_s.loc[h, 'avg_gsc']) / df_s.loc[h, 'avg_gft_league']
             
-            # Calcolo probabilità con distribuzione Poisson (fino a 6 gol)
-            over_prob = sum(poisson.pmf(ih, exp_h) * poisson.pmf(ia, exp_a) for ih in range(7) for ia in range(7) if (ih + ia) > soglia)
-            prob_o = round(over_prob * 100, 1)
-            prob_u = round(100 - prob_o, 1)
+            prob_over_raw = 0.0
+            prob_under_raw = 0.0
             
+            # Ciclo Poisson con correzione Dixon-Coles
+            for ih in range(7):
+                for ia in range(7):
+                    p_base = poisson.pmf(ih, exp_h) * poisson.pmf(ia, exp_a)
+                    p_corrected = p_base * dixon_coles_correction(ih, ia, exp_h, exp_a)
+                    
+                    if (ih + ia) > soglia:
+                        prob_over_raw += p_corrected
+                    else:
+                        prob_under_raw += p_corrected
+            
+            # Normalizzazione
+            tot_prob = prob_over_raw + prob_under_raw
+            prob_o = round((prob_over_raw / tot_prob) * 100, 1)
+            prob_u = round((prob_under_raw / tot_prob) * 100, 1)
+            
+            # Assegnazione Colori personalizzata
             if prob_o > prob_u:
-                label, prob, color = f"🔥 Over {soglia}", prob_o, "#1DB954"
+                label, prob = f"🔥 Over {soglia}", prob_o
+                match prob_o:
+                    case p if p >= 85: color = "#FFBB00"
+                    case p if p >= 65: color = "#FFD667"
+                    case _: color = "#FFE9AB"
             else:
-                label, prob, color = f"❄️ Under {soglia}", prob_u, "#ED4245"
+                label, prob = f"❄️ Under {soglia}", prob_u
+                match prob_u:
+                    case p if p >= 85: color = "#0080FF"
+                    case p if p >= 65: color = "#5AAAFA"
+                    case _: color = "#9ECEFF"
             
+            # Costruzione riga dati
             preds_data.append({
                 "Partita": f"{h} vs {a}", 
                 "Gol Attesi Casa": round(exp_h, 2), 
@@ -395,7 +456,7 @@ lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options
 df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel})
 
 # Calcola altezza Iframe dinamica in base al numero di squadre
-multiplier = 32 if is_mobile else 42
+multiplier = 37 if is_mobile else 42
 h_iframe = (len(df_gol) * multiplier)
 
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
