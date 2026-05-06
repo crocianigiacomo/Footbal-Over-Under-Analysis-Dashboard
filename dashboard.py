@@ -120,7 +120,6 @@ st.markdown("""
             padding: 6px 4px !important; 
             font-size: 11px !important;
         }
-        .pct-track { width: 40px !important; } 
     }
 
     footer, #MainMenu {visibility: hidden;}
@@ -144,8 +143,8 @@ def query_leghe():
 # ──────────────────────────────────────────────
 #  HELPERS HTML (GENERATORI TABELLE)
 # ──────────────────────────────────────────────
-def pct_bar(value, color, nascondi_barra_mobile=False):
-    track_class = "pct-track hide-mob" if nascondi_barra_mobile else "pct-track"
+def pct_bar(value, color):
+    track_class = "pct-track"
     return (
         f'<div class="pct-wrap">'
         f'<div class="{track_class}"><div style="width:{value}%; background:{color}; height:100%; border-radius:3px;"></div></div>'
@@ -223,7 +222,7 @@ def build_prediction_table(df):
             f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</td>"
             f"<td class='num hide-mob'><b>{r['Gol Attesi Totali']}</b></td>"
             f"<td><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
-            f"<td>{pct_bar(r['Prob %'], c, nascondi_barra_mobile=True)}</td>"
+            f"<td>{pct_bar(r['Prob %'], c)}</td>"
             f"</tr>"
         )
     return (
