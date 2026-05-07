@@ -1,4 +1,4 @@
-# TOP OVER GLOBALE (Senza filtro nazione)
+# TOP OVER GLOBALE 
 TOP_OVER_SQL = """
     WITH ps AS (
         SELECT lega, squadra_casa AS squadra,
@@ -16,7 +16,7 @@ TOP_OVER_SQL = """
     ORDER BY pct DESC LIMIT :limit
 """
 
-# TOP UNDER GLOBALE (Senza filtro nazione)
+# TOP UNDER GLOBALE 
 TOP_UNDER_SQL = """
     WITH ps AS (
         SELECT lega, squadra_casa AS squadra,
@@ -66,17 +66,30 @@ CALENDARIO_LEGA_SQL = """
 
 TEAM_STRENGTH_SQL = """
     WITH league_avg AS (
-        SELECT AVG(gol_casa) as avg_gfc_league, AVG(gol_trasferta) as avg_gft_league
+        SELECT
+            AVG(gol_casa)       AS avg_home_league,
+            AVG(gol_trasferta)  AS avg_away_league
         FROM partite WHERE lega = :lega
     ),
-    team_stats AS (
-        SELECT squadra_casa as squadra, AVG(gol_casa) as avg_gfc, AVG(gol_trasferta) as avg_gsc
+    home_stats AS (
+        SELECT squadra_casa AS squadra,
+               AVG(gol_casa)       AS avg_gfc,
+               AVG(gol_trasferta)  AS avg_gsc
         FROM partite WHERE lega = :lega GROUP BY squadra_casa
     ),
     away_stats AS (
-        SELECT squadra_trasferta as squadra, AVG(gol_trasferta) as avg_gft, AVG(gol_casa) as avg_gst
+        SELECT squadra_trasferta AS squadra,
+               AVG(gol_trasferta) AS avg_gft,
+               AVG(gol_casa)      AS avg_gst
         FROM partite WHERE lega = :lega GROUP BY squadra_trasferta
     )
-    SELECT t.squadra, t.avg_gfc, t.avg_gsc, a.avg_gft, a.avg_gst, l.avg_gfc_league, l.avg_gft_league
-    FROM team_stats t JOIN away_stats a ON t.squadra = a.squadra CROSS JOIN league_avg l
+    SELECT
+        h.squadra,
+        h.avg_gfc, h.avg_gsc,
+        a.avg_gft, a.avg_gst,
+        l.avg_home_league,
+        l.avg_away_league
+    FROM home_stats h
+    JOIN away_stats a ON h.squadra = a.squadra
+    CROSS JOIN league_avg l
 """
