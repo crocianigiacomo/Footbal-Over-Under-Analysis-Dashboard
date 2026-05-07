@@ -163,9 +163,9 @@ st.markdown("""
 
     /* ── PCT BAR ── */
     .pct-wrap { display: flex; align-items: center; gap: 6px; min-width: 0; }
-    /* FIX: flex-shrink:0 + width clampato evita overflow su schermi < 360px */
+    
     .pct-track {
-        width: clamp(36px, 10vw, 80px);
+        width: clamp(36px, 10vw, 100px);
         background: #282828; height: 6px; border-radius: 3px; flex-shrink: 0;
     }
     .pct-label { font-weight: 600; font-size: 0.75rem; white-space: nowrap; }
