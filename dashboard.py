@@ -79,7 +79,7 @@ st.markdown("""
     @media screen and (max-width: 768px) {
         #mob-fab {
             display: flex; align-items: center; justify-content: center;
-            position: fixed; bottom: 24px; right: 20px; z-index: 1000;
+            position: fixed; bottom: 24px; right: 20px; z-index: 999999;
             width: 52px; height: 52px; border-radius: 50%;
             background: #5865F2;
             box-shadow: 0 4px 16px rgba(88,101,242,0.55);
@@ -90,13 +90,13 @@ st.markdown("""
         #mob-fab:active { transform: scale(0.92); }
 
         #mob-overlay {
-            display: none; position: fixed; inset: 0; z-index: 1001;
+            display: none; position: fixed; inset: 0; z-index: 999998;
             background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
         }
         #mob-overlay.open { display: block; }
 
         #mob-drawer {
-            position: fixed; top: 0; right: -290px; z-index: 1002;
+            position: fixed; top: 0; right: -290px; z-index: 999999;
             width: 275px; height: 100dvh;
             background: #181818; border-left: 1px solid #2f3136;
             box-shadow: -8px 0 32px rgba(0,0,0,0.5);
@@ -532,59 +532,80 @@ st.markdown('<div class="sub-title">Advanced Data & Predictions System</div>', u
 
 # FAB + drawer 
 st.markdown("""
-<!-- Pulsante hamburger fisso -->
-<div id="mob-fab" onclick="drawerOpen()">☰</div>
+<div id="mob-fab">☰</div>
 
-<!-- Overlay -->
-<div id="mob-overlay" onclick="drawerClose()"></div>
+<div id="mob-overlay"></div>
 
-<!-- Drawer laterale -->
 <div id="mob-drawer">
   <div class="drawer-header">
     <span>Navigazione</span>
-    <button class="drawer-close" onclick="drawerClose()">✕</button>
+    <button class="drawer-close">✕</button>
   </div>
   <nav class="drawer-nav">
-    <a onclick="navTo('statistiche')">
+    <a data-target="statistiche">
       <span class="nav-icon">📊</span> Top Statistiche
       <span class="nav-dot" style="background:#1DB954"></span>
     </a>
-    <a onclick="navTo('reti')">
+    <a data-target="reti">
       <span class="nav-icon">🎯</span> Performance Reti
       <span class="nav-dot" style="background:#5865F2"></span>
     </a>
-    <a onclick="navTo('calendario')">
+    <a data-target="calendario">
       <span class="nav-icon">📅</span> Calendario
       <span class="nav-dot" style="background:#5865F2"></span>
     </a>
-    <a onclick="navTo('previsioni')">
+    <a data-target="previsioni">
       <span class="nav-icon">🔮</span> Previsioni
       <span class="nav-dot" style="background:#ED4245"></span>
     </a>
   </nav>
 </div>
-
-<script>
-function drawerOpen()  {
-    document.getElementById('mob-drawer').classList.add('open');
-    document.getElementById('mob-overlay').classList.add('open');
-    document.getElementById('mob-fab').textContent = '✕';
-}
-function drawerClose() {
-    document.getElementById('mob-drawer').classList.remove('open');
-    document.getElementById('mob-overlay').classList.remove('open');
-    document.getElementById('mob-fab').textContent = '☰';
-}
-function navTo(id) {
-    drawerClose();
-    // Piccolo delay per far chiudere il drawer prima dello scroll
-    setTimeout(function() {
-        var el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 180);
-}
-</script>
 """, unsafe_allow_html=True)
+
+# Iniezione sicura del Javascript nel DOM di Streamlit
+components.html("""
+<script>
+    const doc = window.parent.document;
+    const fab = doc.getElementById('mob-fab');
+    const overlay = doc.getElementById('mob-overlay');
+    const drawer = doc.getElementById('mob-drawer');
+
+    if (fab && overlay && drawer) {
+        // Apri il drawer e nascondi il bottone per estetica
+        fab.onclick = function() {
+            drawer.classList.add('open');
+            overlay.classList.add('open');
+            fab.style.display = 'none'; 
+        };
+
+        // Logica per chiudere il drawer
+        const closeDrawer = function() {
+            drawer.classList.remove('open');
+            overlay.classList.remove('open');
+            fab.style.display = 'flex'; 
+        };
+
+        overlay.onclick = closeDrawer;
+        
+        const closeBtn = doc.querySelector('.drawer-close');
+        if (closeBtn) closeBtn.onclick = closeDrawer;
+
+        // Navigazione fluida
+        const links = doc.querySelectorAll('.drawer-nav a');
+        links.forEach(link => {
+            link.onclick = function(e) {
+                e.preventDefault();
+                closeDrawer();
+                const targetId = this.getAttribute('data-target');
+                setTimeout(() => {
+                    const targetEl = doc.getElementById(targetId);
+                    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 250); // Piccolo delay per far chiudere il drawer prima dello scroll
+            };
+        });
+    }
+</script>
+""", height=0)
 
 leghe_disp = query_leghe()
 
