@@ -74,12 +74,14 @@ st.markdown("""
     }
 
     /* ── FAB + DRAWER  ── */
-    #mob-fab { display: none; }
+    #mob-fab, #mob-overlay, #mob-drawer { 
+        display: none !important; 
+    }
 
     @media screen and (max-width: 768px) {
         #mob-fab {
-            display: flex; align-items: center; justify-content: center;
-            position: fixed; bottom: 24px; right: 20px; z-index: 999999;
+            display: flex !important; align-items: center; justify-content: center;
+            position: fixed; bottom: 90px; right: 20px; z-index: 999999;
             width: 52px; height: 52px; border-radius: 50%;
             background: #5865F2;
             box-shadow: 0 4px 16px rgba(88,101,242,0.55);
@@ -93,7 +95,7 @@ st.markdown("""
             display: none; position: fixed; inset: 0; z-index: 999998;
             background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
         }
-        #mob-overlay.open { display: block; }
+        #mob-overlay.open { display: block !important; }
 
         #mob-drawer {
             position: fixed; top: 0; right: -290px; z-index: 999999;
@@ -101,9 +103,9 @@ st.markdown("""
             background: #181818; border-left: 1px solid #2f3136;
             box-shadow: -8px 0 32px rgba(0,0,0,0.5);
             transition: right 0.28s cubic-bezier(0.4,0,0.2,1);
-            display: flex; flex-direction: column; overflow: hidden;
+            display: flex !important; flex-direction: column; overflow: hidden;
         }
-        #mob-drawer.open { right: 0; }
+        #mob-drawer.open { right: 0 !important; }
 
         .drawer-header {
             display: flex; align-items: center; justify-content: space-between;
@@ -629,8 +631,8 @@ st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e C
 lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options=leghe_disp, key="gol_lega")
 df_gol   = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-multiplier = 46 if is_mobile else 42   
-h_iframe   = 48 + len(df_gol) * multiplier  
+multiplier = 42 if is_mobile else 38   
+h_iframe   = 42 + len(df_gol) * multiplier  
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
