@@ -81,7 +81,7 @@ st.markdown("""
     @media screen and (max-width: 768px) {
         #mob-fab {
             display: flex !important; align-items: center; justify-content: center;
-            position: fixed; bottom: 90px; right: 20px; z-index: 999999;
+            position: fixed; bottom: 70px; right: 10px; z-index: 999999;
             width: 52px; height: 52px; border-radius: 50%;
             background: #5865F2;
             box-shadow: 0 4px 16px rgba(88,101,242,0.55);
@@ -631,7 +631,7 @@ st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e C
 lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options=leghe_disp, key="gol_lega")
 df_gol   = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-multiplier = 42 if is_mobile else 38   
+multiplier = 30 if is_mobile else 38   
 h_iframe   = 42 + len(df_gol) * multiplier  
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
