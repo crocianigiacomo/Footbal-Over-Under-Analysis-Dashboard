@@ -14,8 +14,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# FIX: il JS ora fa reload UNA SOLA VOLTA (solo se 'sw' è assente),
-# evitando il loop di reload che il vecchio codice poteva innescare.
 components.html("""
 <script>
     var params = new URLSearchParams(window.parent.location.search);
@@ -43,7 +41,7 @@ st.markdown("""
     .main-title {
         font-size: 2.5rem; font-weight: 800;
         color: #ffffff; letter-spacing: -0.5px;
-        margin-top: 0 !important; margin-bottom: 0.2rem; text-align: center;
+        margin-top: 1rem; margin-bottom: 0.2rem; text-align: center;
         font-family: 'Inter', 'Segoe UI', sans-serif;
     }
     .sub-title {
@@ -58,51 +56,87 @@ st.markdown("""
         background: #181818; border-left: 4px solid #1DB954;
         padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        scroll-margin-top: 60px; /* offset per navbar sticky */
+        scroll-margin-top: 20px; /* offset drawer */
     }
     .section-title-red {
         font-size: 1.1rem; font-weight: 700; color: #ffffff;
         background: #181818; border-left: 4px solid #ED4245;
         padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        scroll-margin-top: 60px;
+        scroll-margin-top: 20px;
     }
     .section-title-blue {
         font-size: 1.1rem; font-weight: 700; color: #ffffff;
         background: #181818; border-left: 4px solid #5865F2;
         padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        scroll-margin-top: 60px;
+        scroll-margin-top: 20px;
     }
 
-    /* ── NAVBAR MOBILE STICKY ── */
-    .mob-nav {
-        display: none; /* nascosta su desktop */
-    }
+    /* ── FAB + DRAWER  ── */
+    #mob-fab { display: none; }
+
     @media screen and (max-width: 768px) {
-        .mob-nav {
-            display: flex;
-            position: sticky; top: 0; z-index: 999;
-            background: #0e1117;
-            border-bottom: 1px solid #282828;
-            padding: 0;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
+        #mob-fab {
+            display: flex; align-items: center; justify-content: center;
+            position: fixed; bottom: 24px; right: 20px; z-index: 1000;
+            width: 52px; height: 52px; border-radius: 50%;
+            background: #5865F2;
+            box-shadow: 0 4px 16px rgba(88,101,242,0.55);
+            font-size: 22px; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
         }
-        .mob-nav::-webkit-scrollbar { display: none; }
-        .mob-nav a {
-            flex: 0 0 auto;
-            padding: 12px 16px;
-            font-size: 13px; font-weight: 600;
-            color: #b3b3b3; text-decoration: none;
-            white-space: nowrap;
-            border-bottom: 2px solid transparent;
-            transition: color 0.2s, border-color 0.2s;
-            min-height: 44px; /* Apple HIG touch target */
-            display: flex; align-items: center;
+        #mob-fab:active { transform: scale(0.92); }
+
+        #mob-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1001;
+            background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
         }
-        .mob-nav a:hover, .mob-nav a:active { color: #ffffff; border-bottom-color: #5865F2; }
+        #mob-overlay.open { display: block; }
+
+        #mob-drawer {
+            position: fixed; top: 0; right: -290px; z-index: 1002;
+            width: 275px; height: 100dvh;
+            background: #181818; border-left: 1px solid #2f3136;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+            transition: right 0.28s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        #mob-drawer.open { right: 0; }
+
+        .drawer-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 22px 16px 16px;
+            border-bottom: 1px solid #2f3136;
+        }
+        .drawer-header span {
+            font-size: 11px; font-weight: 700; color: #8e9297;
+            letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        .drawer-close {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #2f3136; border: none; color: #b3b3b3;
+            font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .drawer-close:active { background: #404249; }
+
+        .drawer-nav { display: flex; flex-direction: column; padding: 14px 12px; gap: 8px; }
+        .drawer-nav a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px; border-radius: 10px;
+            background: #202225; text-decoration: none;
+            color: #dcddde; font-size: 15px; font-weight: 600;
+            border: 1px solid #2f3136; min-height: 52px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .drawer-nav a .nav-icon { font-size: 20px; line-height: 1; }
+        .drawer-nav a .nav-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            margin-left: auto; flex-shrink: 0;
+        }
+        .drawer-nav a:active { background: #2f3136; border-color: #5865F2; }
     }
 
     /* ── DIVIDER ── */
@@ -219,8 +253,6 @@ def build_stats_table(df, tipo, soglia):
     is_over = tipo == "over"
     val_col = "n_over" if is_over else "n_under"
 
-    # FIX: enumerate garantisce un indice sequenziale corretto (1, 2, 3...)
-    # indipendentemente dall'indice interno del DataFrame.
     for rank, (_, r) in enumerate(df.iterrows(), start=1):
         pct = r["pct"]
         if is_over:
@@ -409,7 +441,7 @@ def build_gol_table(df):
 #  LOGICA PREVISIONI E POISSON
 # ──────────────────────────────────────────────
 def dixon_coles_correction(h, a, exp_h, exp_a, rho=-0.15):
-    """Fattore di correzione Dixon-Coles per la dipendenza dei gol a basso punteggio."""
+    
     if   h == 0 and a == 0: return 1 - (exp_h * exp_a * rho)
     elif h == 0 and a == 1: return 1 + (exp_h * rho)
     elif h == 1 and a == 0: return 1 + (exp_a * rho)
@@ -442,16 +474,12 @@ def get_predictions_section(lega, soglia):
         if h not in df_s.index or a not in df_s.index:
             continue
 
-        # FIX: denominatori incrociati (Maher/Dixon-Coles):
-        #   exp_h → normalizzato su avg_away_league (media gol trasferta di lega)
-        #   exp_a → normalizzato su avg_home_league (media gol casa di lega)
         exp_h = (df_s.loc[h, 'avg_gfc'] * df_s.loc[a, 'avg_gst']) / df_s.loc[h, 'avg_away_league']
         exp_a = (df_s.loc[a, 'avg_gft'] * df_s.loc[h, 'avg_gsc']) / df_s.loc[h, 'avg_home_league']
 
         prob_over_raw  = 0.0
         prob_under_raw = 0.0
 
-        # FIX: range esteso a 10 gol (copre partite ad alto punteggio senza costo rilevante)
         for ih in range(10):
             for ia in range(10):
                 p_base      = poisson.pmf(ih, exp_h) * poisson.pmf(ia, exp_a)
@@ -502,14 +530,60 @@ def get_predictions_section(lega, soglia):
 st.markdown('<div class="main-title">XG Football Analytics</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Advanced Data & Predictions System</div>', unsafe_allow_html=True)
 
-# Navbar sticky visibile solo su mobile — link ancorati alle 4 sezioni
+# FAB + drawer 
 st.markdown("""
-<nav class="mob-nav">
-    <a href="#statistiche">📊 Stats</a>
-    <a href="#reti">🎯 Reti</a>
-    <a href="#calendario">📅 Calendario</a>
-    <a href="#previsioni">🔮 Previsioni</a>
-</nav>
+<!-- Pulsante hamburger fisso -->
+<div id="mob-fab" onclick="drawerOpen()">☰</div>
+
+<!-- Overlay -->
+<div id="mob-overlay" onclick="drawerClose()"></div>
+
+<!-- Drawer laterale -->
+<div id="mob-drawer">
+  <div class="drawer-header">
+    <span>Navigazione</span>
+    <button class="drawer-close" onclick="drawerClose()">✕</button>
+  </div>
+  <nav class="drawer-nav">
+    <a onclick="navTo('statistiche')">
+      <span class="nav-icon">📊</span> Top Statistiche
+      <span class="nav-dot" style="background:#1DB954"></span>
+    </a>
+    <a onclick="navTo('reti')">
+      <span class="nav-icon">🎯</span> Performance Reti
+      <span class="nav-dot" style="background:#5865F2"></span>
+    </a>
+    <a onclick="navTo('calendario')">
+      <span class="nav-icon">📅</span> Calendario
+      <span class="nav-dot" style="background:#5865F2"></span>
+    </a>
+    <a onclick="navTo('previsioni')">
+      <span class="nav-icon">🔮</span> Previsioni
+      <span class="nav-dot" style="background:#ED4245"></span>
+    </a>
+  </nav>
+</div>
+
+<script>
+function drawerOpen()  {
+    document.getElementById('mob-drawer').classList.add('open');
+    document.getElementById('mob-overlay').classList.add('open');
+    document.getElementById('mob-fab').textContent = '✕';
+}
+function drawerClose() {
+    document.getElementById('mob-drawer').classList.remove('open');
+    document.getElementById('mob-overlay').classList.remove('open');
+    document.getElementById('mob-fab').textContent = '☰';
+}
+function navTo(id) {
+    drawerClose();
+    // Piccolo delay per far chiudere il drawer prima dello scroll
+    setTimeout(function() {
+        var el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 180);
+}
+</script>
 """, unsafe_allow_html=True)
 
 leghe_disp = query_leghe()
@@ -534,8 +608,8 @@ st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e C
 lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options=leghe_disp, key="gol_lega")
 df_gol   = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-multiplier = 46 if is_mobile else 42   # mobile: riga più alta per font 13px + padding
-h_iframe   = 48 + len(df_gol) * multiplier  # 48px = header fisso
+multiplier = 46 if is_mobile else 42   
+h_iframe   = 48 + len(df_gol) * multiplier  
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
