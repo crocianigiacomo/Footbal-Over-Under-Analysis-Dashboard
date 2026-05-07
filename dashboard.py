@@ -631,7 +631,7 @@ st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e C
 lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options=leghe_disp, key="gol_lega")
 df_gol   = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-multiplier = 38 if is_mobile else 38   
+multiplier = 35 if is_mobile else 38   
 h_iframe   = 42 + len(df_gol) * multiplier  
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
