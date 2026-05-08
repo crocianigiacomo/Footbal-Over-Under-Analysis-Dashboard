@@ -37,7 +37,7 @@ st.markdown("""
     /* Spazio extra sopra e sotto per non coprire i contenuti con la barra nav o il bordo */
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 180px !important; 
+        padding-bottom: 160px !important; 
     }
 
     /* ── TITOLI PRINCIPALI ── */
@@ -66,7 +66,7 @@ st.markdown("""
     /* ── STICKY BOTTOM NAV BAR ── */
     .bottom-nav {
         position: fixed;
-        bottom: 55px; 
+        bottom: 50px; 
         left: 50%;
         transform: translateX(-50%); 
         width: 90%; 
@@ -141,19 +141,19 @@ st.markdown("""
 <div class="bottom-nav">
     <a href="#statistiche" class="nav-item">
         <span class="nav-icon">📊</span>
-        <span class="nav-label">Stats</span>
+        <span class="nav-label">Rank</span>
     </a>
     <a href="#reti" class="nav-item">
         <span class="nav-icon">🎯</span>
-        <span class="nav-label">Reti</span>
+        <span class="nav-label">Gol Stats</span>
     </a>
     <a href="#calendario" class="nav-item">
         <span class="nav-icon">📅</span>
-        <span class="nav-label">Cal</span>
+        <span class="nav-label">Calendario</span>
     </a>
     <a href="#previsioni" class="nav-item">
         <span class="nav-icon">🔮</span>
-        <span class="nav-label">Pred</span>
+        <span class="nav-label">Predict</span>
     </a>
 </div>
 """, unsafe_allow_html=True)
