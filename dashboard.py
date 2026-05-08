@@ -226,7 +226,7 @@ def build_calendario(df):
             f"<td style='color:#8e9297;'>{dt}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>G.</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th>Data</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Turno</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th>Data</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_prediction_table(df):
     rows = ""
@@ -375,7 +375,6 @@ def get_predictions_section(lega, soglia, alpha):
     df_n['data_ora'] = pd.to_datetime(df_n['data_ora'])
     prox = df_n.sort_values('data_ora').iloc[0]['giornata']
     matches = df_n[df_n['giornata'] == prox]
-    st.write(f"#### 📅 Analisi Giornata {prox}")
 
     preds = []
     for _, m in matches.iterrows():
@@ -444,7 +443,7 @@ if not df_next.empty:
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
 # SEZIONE 4: PREVISIONI
-st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni Algoritmiche</div>', unsafe_allow_html=True)
+st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni </div>', unsafe_allow_html=True)
 cp1, cp2, cp3 = st.columns([2, 1, 1])
 with cp1: lega_pred = st.selectbox("Lega:", options=leghe_disp, key="pred_box")
 with cp2: soglia_pred = _soglia_widget("Soglia Pred:", "pred_soglia")
