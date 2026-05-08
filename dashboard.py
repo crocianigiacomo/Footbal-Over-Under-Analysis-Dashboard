@@ -17,7 +17,7 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-   /* ── PULIZIA TOTALE (VERSIONE NUKE) ── */
+   /* ── PULIZIA TOTALE ── */
     
     /* Nasconde l'header e la decorazione superiore */
     header[data-testid="stHeader"], [data-testid="stDecoration"] {
@@ -26,14 +26,6 @@ st.markdown("""
 
     /* Nasconde il footer standard */
     footer {
-        display: none !important;
-    }
-
-    /* 🔥 TARGETING MIRATO: Nasconde "Hosted by / Created by" (Viewer Badge) */
-    /* Usiamo il selettore "inizia con" per bypassare i codici dinamici tipo __1QSob */
-    div[class^="viewerBadge"], 
-    div[class*="viewerBadge"],
-    [data-testid="stStatusWidget"] {
         display: none !important;
     }
             
@@ -45,7 +37,7 @@ st.markdown("""
     /* Spazio extra sopra e sotto per non coprire i contenuti con la barra nav o il bordo */
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 140px !important; 
+        padding-bottom: 180px !important; 
     }
 
     /* ── TITOLI PRINCIPALI ── */
@@ -74,7 +66,7 @@ st.markdown("""
     /* ── STICKY BOTTOM NAV BAR ── */
     .bottom-nav {
         position: fixed;
-        bottom: 20px; 
+        bottom: 55px; 
         left: 50%;
         transform: translateX(-50%); 
         width: 90%; 
