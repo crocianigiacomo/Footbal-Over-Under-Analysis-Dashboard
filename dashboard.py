@@ -340,7 +340,7 @@ def build_stats_table(df, tipo, soglia):
         rank_cel = f"<span class='rank-badge'>{MEDALS[rank]}</span>" if rank <= 3 else str(rank)
         rows += (
             f"<tr class='{row_cls}'>"
-            f"<td class='num hide-mob'>{rank_cel}</td>"
+            f"<td class='num'>{rank_cel}</td>"
             f"<td class='hide-mob'>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
             f"<td class='num'>{int(r[val_col])} / {int(r['partite'])}</td>"
@@ -352,7 +352,7 @@ def build_stats_table(df, tipo, soglia):
     return (
         f"<div class='tbl-scroll'><table class='cal-table'>"
         f"<thead><tr>"
-        f"<th class='num hide-mob'>#</th>"
+        f"<th class='num'>#</th>"
         f"<th class='hide-mob'>Lega</th>"
         f"<th>Squadra</th>"
         f"<th class='num'>Esiti</th>"
