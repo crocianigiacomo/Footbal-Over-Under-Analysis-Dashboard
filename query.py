@@ -64,6 +64,15 @@ CALENDARIO_LEGA_SQL = """
     ORDER BY giornata ASC, data_ora ASC
 """
 
+# Dati grezzi per calcolo pesi temporali e stima rho in Python
+MATCH_DATA_SQL = """
+    SELECT giornata, squadra_casa, squadra_trasferta,
+           gol_casa, gol_trasferta
+    FROM partite
+    WHERE lega = :lega
+    ORDER BY giornata ASC
+"""
+
 TEAM_STRENGTH_SQL = """
     WITH league_avg AS (
         SELECT

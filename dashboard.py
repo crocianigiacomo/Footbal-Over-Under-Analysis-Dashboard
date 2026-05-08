@@ -1,7 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import numpy as np
 from scipy.stats import poisson
+from scipy.optimize import minimize_scalar
 from datetime import datetime
 import query
 
@@ -200,8 +202,78 @@ st.markdown("""
 
     footer, #MainMenu { visibility: hidden; }
 
-    div[data-baseweb="select"], div[data-baseweb="select"] * { cursor: pointer !important; }
-    div[data-baseweb="select"]:hover { border-color: #5865F2 !important; transition: border-color 0.3s ease; }
+    /* ── SELECTBOX DARK THEME + CURSOR FIX ── */
+    div[data-baseweb="select"] > div {
+        background: #1e1e1e !important;
+        border-color: #2f3136 !important;
+        border-radius: 8px !important;
+        transition: border-color 0.2s;
+        cursor: pointer !important;
+    }
+    div[data-baseweb="select"] > div:hover { border-color: #5865F2 !important; }
+    /* FIX: impedisce che l'input interno mostri il cursore testo */
+    div[data-baseweb="select"] input,
+    div[data-baseweb="select"] [role="combobox"],
+    div[data-baseweb="select"] * { cursor: pointer !important; user-select: none !important; }
+    div[data-baseweb="select"] svg { color: #b3b3b3 !important; }
+    [data-baseweb="menu"] {
+        background: #1e1e1e !important;
+        border: 1px solid #2f3136 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+    }
+    [data-baseweb="option"] { background: #1e1e1e !important; color: #dcddde !important; cursor: pointer !important; }
+    [data-baseweb="option"]:hover { background: #2f3136 !important; }
+
+    /* ── SEGMENTED CONTROL DARK THEME ── */
+    [data-testid="stSegmentedControl"] > div {
+        background: #1e1e1e !important;
+        border: 1px solid #2f3136 !important;
+        border-radius: 8px !important;
+        padding: 3px !important;
+        gap: 3px !important;
+    }
+    [data-testid="stSegmentedControl"] button {
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        color: #8e9297 !important;
+        transition: background 0.2s, color 0.2s !important;
+        border: none !important;
+    }
+    [data-testid="stSegmentedControl"] button[aria-selected="true"] {
+        background: #5865F2 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(88,101,242,0.4) !important;
+    }
+
+    /* ── LABEL WIDGET ── */
+    [data-testid="stWidgetLabel"] p {
+        color: #b3b3b3 !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+    }
+
+    /* ── GERARCHIA RIGHE TABELLA ── */
+    .row-gold   td { background: rgba(255,187,0,0.07) !important; }
+    .row-silver td { background: rgba(180,180,180,0.05) !important; }
+    .row-bronze td { background: rgba(180,100,40,0.06) !important; }
+    .row-gold:hover   td { background: rgba(255,187,0,0.13) !important; }
+    .row-silver:hover td { background: rgba(180,180,180,0.10) !important; }
+    .row-bronze:hover td { background: rgba(180,100,40,0.11) !important; }
+    .rank-badge { display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .sep-row td {
+        padding: 4px 12px !important;
+        background: #202225 !important;
+        color: #8e9297 !important;
+        font-size: 0.7rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        border-top: 1px solid #2f3136 !important;
+        border-bottom: 1px solid #2f3136 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -254,17 +326,21 @@ def build_stats_table(df, tipo, soglia):
     rows = ""
     is_over = tipo == "over"
     val_col = "n_over" if is_over else "n_under"
+    MEDALS    = {1: "🥇", 2: "🥈", 3: "🥉"}
+    ROW_CLASS = {1: "row-gold", 2: "row-silver", 3: "row-bronze"}
+    ncols = 5
 
     for rank, (_, r) in enumerate(df.iterrows(), start=1):
-        pct = r["pct"]
-        if is_over:
-            color = "#FFBB00" if pct >= 75 else "#FFD667" if pct >= 60 else "#FFE9AB"
-        else:
-            color = "#0080FF" if pct >= 75 else "#5AAAFA" if pct >= 60 else "#9ECEFF"
-
+        if rank == 6:
+            rows += f"<tr class='sep-row'><td colspan='{ncols}'>— Altre squadre —</td></tr>"
+        pct      = r["pct"]
+        color    = ("#FFBB00" if pct >= 75 else "#FFD667" if pct >= 60 else "#FFE9AB") if is_over \
+                   else ("#0080FF" if pct >= 75 else "#5AAAFA" if pct >= 60 else "#9ECEFF")
+        row_cls  = ROW_CLASS.get(rank, "")
+        rank_cel = f"<span class='rank-badge'>{MEDALS[rank]}</span>" if rank <= 3 else str(rank)
         rows += (
-            f"<tr>"
-            f"<td class='num hide-mob'>{rank}</td>"
+            f"<tr class='{row_cls}'>"
+            f"<td class='num hide-mob'>{rank_cel}</td>"
             f"<td class='hide-mob'>{r['lega']}</td>"
             f"<td><b>{r['squadra']}</b></td>"
             f"<td class='num'>{int(r[val_col])} / {int(r['partite'])}</td>"
@@ -344,6 +420,41 @@ def build_prediction_table(df):
         "</tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
+
+
+def empty_state(icon_svg: str, title: str, subtitle: str) -> str:
+    return f"""
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+        padding:3rem 2rem;border-radius:12px;background:#181818;border:1px dashed #2f3136;
+        text-align:center;gap:1rem;">
+        <div style="opacity:0.5">{icon_svg}</div>
+        <div style="color:#ffffff;font-weight:700;font-size:1rem">{title}</div>
+        <div style="color:#8e9297;font-size:0.85rem;max-width:320px;line-height:1.5">{subtitle}</div>
+    </div>"""
+
+EMPTY_CALENDAR_SVG = """
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="14" width="48" height="42" rx="6" stroke="#5865F2" stroke-width="2.5"/>
+  <line x1="8" y1="26" x2="56" y2="26" stroke="#5865F2" stroke-width="2.5"/>
+  <rect x="20" y="8" width="4" height="12" rx="2" fill="#5865F2"/>
+  <rect x="40" y="8" width="4" height="12" rx="2" fill="#5865F2"/>
+  <circle cx="22" cy="38" r="3" fill="#8e9297"/>
+  <circle cx="32" cy="38" r="3" fill="#8e9297"/>
+  <circle cx="42" cy="38" r="3" fill="#8e9297"/>
+  <circle cx="22" cy="48" r="3" fill="#8e9297"/>
+  <circle cx="32" cy="48" r="3" fill="#8e9297"/>
+</svg>"""
+
+EMPTY_PRED_SVG = """
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="32" cy="32" r="22" stroke="#ED4245" stroke-width="2.5"/>
+  <path d="M32 20 L36 28 L45 29 L38 36 L40 45 L32 41 L24 45 L26 36 L19 29 L28 28 Z"
+        stroke="#ED4245" stroke-width="2" stroke-linejoin="round"/>
+  <line x1="32" y1="8" x2="32" y2="4" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="32" y1="60" x2="32" y2="56" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="8" y1="32" x2="4" y2="32" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="60" y1="32" x2="56" y2="32" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+</svg>"""
 
 
 def build_gol_table(df):
@@ -442,75 +553,146 @@ def build_gol_table(df):
 # ──────────────────────────────────────────────
 #  LOGICA PREVISIONI E POISSON
 # ──────────────────────────────────────────────
-def dixon_coles_correction(h, a, exp_h, exp_a, rho=-0.15):
-    
-    if   h == 0 and a == 0: return 1 - (exp_h * exp_a * rho)
-    elif h == 0 and a == 1: return 1 + (exp_h * rho)
-    elif h == 1 and a == 0: return 1 + (exp_a * rho)
-    elif h == 1 and a == 1: return 1 - rho
+def dixon_coles_correction(h, a, exp_h, exp_a, rho):
+    if   h == 0 and a == 0: return max(1e-9, 1 - (exp_h * exp_a * rho))
+    elif h == 0 and a == 1: return max(1e-9, 1 + (exp_h * rho))
+    elif h == 1 and a == 0: return max(1e-9, 1 + (exp_a * rho))
+    elif h == 1 and a == 1: return max(1e-9, 1 - rho)
     else: return 1.0
 
 
-def get_predictions_section(lega, soglia):
-    df_s = conn.query(query.TEAM_STRENGTH_SQL, params={"lega": lega}, ttl=3600)
-    if df_s.empty:
-        st.warning("Dati storici insufficienti per questa lega.")
+def compute_weighted_strengths(df: pd.DataFrame, alpha: float):
+    """
+    Calcola forza attacco/difesa con peso esponenziale decrescente per giornata.
+
+    w(g) = exp(-alpha * (max_giornata - g))
+
+    alpha = 0.0 → tutte le partite pesano uguale (media semplice)
+    alpha = 0.1 → decadimento morbido
+    alpha = 0.3 → solo le ultime giornate contano davvero
+
+    Restituisce: (strengths_df, avg_home_league, avg_away_league)
+    """
+    df = df.copy()
+    max_g = df['giornata'].max()
+    df['w'] = np.exp(-alpha * (max_g - df['giornata']))
+
+    tot_w        = df['w'].sum()
+    avg_home_lge = (df['gol_casa']      * df['w']).sum() / tot_w
+    avg_away_lge = (df['gol_trasferta'] * df['w']).sum() / tot_w
+
+    teams = sorted(set(df['squadra_casa']) | set(df['squadra_trasferta']))
+    records = []
+    for team in teams:
+        hm = df[df['squadra_casa']      == team]
+        am = df[df['squadra_trasferta'] == team]
+        wh, wa = hm['w'].sum(), am['w'].sum()
+        if wh == 0 or wa == 0:
+            continue
+        records.append({
+            'squadra': team,
+            'avg_gfc': (hm['gol_casa']      * hm['w']).sum() / wh,
+            'avg_gsc': (hm['gol_trasferta'] * hm['w']).sum() / wh,
+            'avg_gft': (am['gol_trasferta'] * am['w']).sum() / wa,
+            'avg_gst': (am['gol_casa']      * am['w']).sum() / wa,
+        })
+
+    return pd.DataFrame(records).set_index('squadra'), avg_home_lge, avg_away_lge
+
+
+def estimate_rho(df: pd.DataFrame, strengths: pd.DataFrame,
+                 avg_home_lge: float, avg_away_lge: float, alpha: float) -> float:
+
+    df = df.copy()
+    max_g = df['giornata'].max()
+    df['w'] = np.exp(-alpha * (max_g - df['giornata']))
+    low = df[(df['gol_casa'] <= 1) & (df['gol_trasferta'] <= 1)]
+
+    if len(low) < 5:
+        return -0.15  # fallback con pochi dati
+
+    def neg_ll(rho):
+        ll = 0.0
+        for _, row in low.iterrows():
+            sh, sa = row['squadra_casa'], row['squadra_trasferta']
+            if sh not in strengths.index or sa not in strengths.index:
+                continue
+            exp_h = strengths.loc[sh, 'avg_gfc'] * strengths.loc[sa, 'avg_gst'] / avg_away_lge
+            exp_a = strengths.loc[sa, 'avg_gft'] * strengths.loc[sh, 'avg_gsc'] / avg_home_lge
+            tau   = dixon_coles_correction(int(row['gol_casa']), int(row['gol_trasferta']),
+                                           exp_h, exp_a, rho)
+            ll += row['w'] * np.log(max(tau, 1e-9))
+        return -ll
+
+    result = minimize_scalar(neg_ll, bounds=(-0.5, 0.1), method='bounded')
+    return round(result.x, 4) if result.success else -0.15
+
+
+def get_predictions_section(lega: str, soglia: float, alpha: float):
+    # 1. Dati grezzi (non cached per alpha variabile)
+    df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": lega}, ttl=3600)
+
+    if df_raw.empty or len(df_raw) < 10:
+        st.markdown(
+            empty_state(EMPTY_PRED_SVG, "Dati insufficienti",
+                        "Non ci sono abbastanza partite storiche per calcolare le previsioni."),
+            unsafe_allow_html=True
+        )
         return
 
-    df_s.set_index('squadra', inplace=True)
+    # 2. Forze ponderate + stima rho
+    strengths, avg_home_lge, avg_away_lge = compute_weighted_strengths(df_raw, alpha)
+    rho = estimate_rho(df_raw, strengths, avg_home_lge, avg_away_lge, alpha)
 
+    # 3. Calendario
     df_n = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega}, ttl=3600)
     if df_n.empty:
-        st.info("Nessun match futuro trovato in calendario.")
+        st.markdown(
+            empty_state(EMPTY_CALENDAR_SVG, "Nessuna partita futura",
+                        "Non sono presenti match futuri in calendario per questa lega."),
+            unsafe_allow_html=True
+        )
         return
 
     df_n['data_ora'] = pd.to_datetime(df_n['data_ora'])
-    prox   = df_n.sort_values('data_ora').iloc[0]['giornata']
+    prox    = df_n.sort_values('data_ora').iloc[0]['giornata']
     matches = df_n[df_n['giornata'] == prox]
+
 
     st.write(f"#### 📅 Turno in analisi: Giornata {prox}")
 
+    # 5. Calcolo Poisson + Dixon-Coles
     preds_data = []
     for _, m in matches.iterrows():
         h, a = m['squadra_casa'], m['squadra_trasferta']
-        if h not in df_s.index or a not in df_s.index:
+        if h not in strengths.index or a not in strengths.index:
             continue
 
-        exp_h = (df_s.loc[h, 'avg_gfc'] * df_s.loc[a, 'avg_gst']) / df_s.loc[h, 'avg_away_league']
-        exp_a = (df_s.loc[a, 'avg_gft'] * df_s.loc[h, 'avg_gsc']) / df_s.loc[h, 'avg_home_league']
+        exp_h = strengths.loc[h, 'avg_gfc'] * strengths.loc[a, 'avg_gst'] / avg_away_lge
+        exp_a = strengths.loc[a, 'avg_gft'] * strengths.loc[h, 'avg_gsc'] / avg_home_lge
 
-        prob_over_raw  = 0.0
-        prob_under_raw = 0.0
-
+        prob_over_raw, prob_under_raw = 0.0, 0.0
         for ih in range(10):
             for ia in range(10):
-                p_base      = poisson.pmf(ih, exp_h) * poisson.pmf(ia, exp_a)
-                p_corrected = p_base * dixon_coles_correction(ih, ia, exp_h, exp_a)
-
+                p = poisson.pmf(ih, exp_h) * poisson.pmf(ia, exp_a)
+                p *= dixon_coles_correction(ih, ia, exp_h, exp_a, rho)
                 if (ih + ia) > soglia:
-                    prob_over_raw  += p_corrected
+                    prob_over_raw  += p
                 else:
-                    prob_under_raw += p_corrected
+                    prob_under_raw += p
 
-        # Normalizzazione
-        tot_prob = prob_over_raw + prob_under_raw
-        if tot_prob == 0:
+        tot = prob_over_raw + prob_under_raw
+        if tot == 0:
             continue
-        prob_o = round((prob_over_raw  / tot_prob) * 100, 1)
-        prob_u = round((prob_under_raw / tot_prob) * 100, 1)
+        prob_o = round((prob_over_raw  / tot) * 100, 1)
+        prob_u = round((prob_under_raw / tot) * 100, 1)
 
         if prob_o > prob_u:
             label, prob = f"🔥 Over {soglia}", prob_o
-            match prob_o:
-                case p if p >= 85: color = "#FFBB00"
-                case p if p >= 65: color = "#FFD667"
-                case _:            color = "#FFE9AB"
+            color = "#FFBB00" if prob_o >= 85 else "#FFD667" if prob_o >= 65 else "#FFE9AB"
         else:
             label, prob = f"❄️ Under {soglia}", prob_u
-            match prob_u:
-                case p if p >= 85: color = "#0080FF"
-                case p if p >= 65: color = "#5AAAFA"
-                case _:            color = "#9ECEFF"
+            color = "#0080FF" if prob_u >= 85 else "#5AAAFA" if prob_u >= 65 else "#9ECEFF"
 
         preds_data.append({
             "Partita":              f"{h} vs {a}",
@@ -524,6 +706,12 @@ def get_predictions_section(lega, soglia):
 
     if preds_data:
         st.markdown(build_prediction_table(pd.DataFrame(preds_data)), unsafe_allow_html=True)
+    else:
+        st.markdown(
+            empty_state(EMPTY_PRED_SVG, "Previsioni non disponibili",
+                        "Alcune squadre del prossimo turno non hanno dati storici sufficienti."),
+            unsafe_allow_html=True
+        )
 
 
 # ──────────────────────────────────────────────
@@ -617,10 +805,12 @@ soglia_stats = _soglia_widget("Seleziona Soglia Gol:", "stats_soglia")
 
 c1, c2 = st.columns(2, gap="large")
 with c1:
-    df_ov = conn.query(query.TOP_OVER_SQL,  params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.markdown(build_stats_table(df_ov, "over",  soglia_stats), unsafe_allow_html=True)
+    with st.spinner("Caricamento Over..."):
+        df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
+    st.markdown(build_stats_table(df_ov, "over", soglia_stats), unsafe_allow_html=True)
 with c2:
-    df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
+    with st.spinner("Caricamento Under..."):
+        df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
     st.markdown(build_stats_table(df_un, "under", soglia_stats), unsafe_allow_html=True)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
@@ -629,10 +819,12 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 # --- SEZIONE 2: CLASSIFICA GOL ---
 st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e Classifica xG</div>', unsafe_allow_html=True)
 lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options=leghe_disp, key="gol_lega")
-df_gol   = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-multiplier = 34 if is_mobile else 38   
-h_iframe   = 42 + len(df_gol) * multiplier  
+with st.spinner(f"Caricamento dati {lega_sel}..."):
+    df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
+
+multiplier = 34 if is_mobile else 38
+h_iframe   = 42 + len(df_gol) * multiplier
 components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
@@ -641,18 +833,22 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 # --- SEZIONE 3: CALENDARIO PROSSIMO TURNO ---
 st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
 lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
-df_next  = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
+
+with st.spinner(f"Caricamento calendario {lega_cal}..."):
+    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
 
 if not df_next.empty:
     df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
     prossima_g_cal = df_next.sort_values('data_ora').iloc[0]['giornata']
     st.write(f"#### Giornata {prossima_g_cal}")
+    st.markdown(build_calendario(df_next[df_next['giornata'] == prossima_g_cal]), unsafe_allow_html=True)
+else:
     st.markdown(
-        build_calendario(df_next[df_next['giornata'] == prossima_g_cal]),
+        empty_state(EMPTY_CALENDAR_SVG, "Nessuna partita in programma",
+                    f"Il calendario per {lega_cal} non contiene partite future. "
+                    "Riprova dopo l'aggiornamento del database."),
         unsafe_allow_html=True
     )
-else:
-    st.info("Nessuna partita futura in programma per questa lega.")
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
@@ -660,13 +856,24 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 # --- SEZIONE 4: PREVISIONI ALGORITMICHE (Poisson + Dixon-Coles) ---
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni Algoritmiche</div>', unsafe_allow_html=True)
 
-c_p1, c_p2 = st.columns([2, 1])
+c_p1, c_p2, c_p3 = st.columns([2, 1, 1])
 with c_p1:
     lega_pred = st.selectbox("Analizza Lega:", options=leghe_disp, key="pred_box")
 with c_p2:
     soglia_pred = _soglia_widget("Soglia Previsione:", "pred_soglia")
+with c_p3:
+    # Toggle semplice — α consigliato in background, invisible all'utente
+    forma_recente = st.toggle(
+        "Forma Recente",
+        value=True,
+        key="forma_recente",
+        help="Attivo: le ultime partite pesano di più nel calcolo. "
+             "Disattivo: tutta la stagione vale uguale."
+    )
+    alpha = 0.10 if forma_recente else 0.0
 
-get_predictions_section(lega_pred, soglia_pred)
+with st.spinner(f"Calcolo previsioni {lega_pred}..."):
+    get_predictions_section(lega_pred, soglia_pred, alpha)
 
 # --- FOOTER ---
 st.markdown(
