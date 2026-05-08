@@ -17,6 +17,15 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    /* Nasconde il badge "Manage App" e lo stato in basso a destra */
+    div[data-testid="stStatusWidget"], 
+    .viewerBadge_container__1QSob, 
+    .viewerBadge_link__1QSob {
+        display: none !important;
+    }
+
+    /* Nasconde il menù hamburger in alto a destra e il footer */
+    #MainMenu, footer { visibility: hidden !important; }
     /* ── RESET E SCROLL SMOOTH ── */
     html { scroll-behavior: smooth; }
     
@@ -25,7 +34,7 @@ st.markdown("""
     /* Spazio extra sopra e sotto per non coprire i contenuti con la barra nav o il bordo */
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 120px !important; 
+        padding-bottom: 140px !important; 
     }
 
     /* ── TITOLI PRINCIPALI ── */
@@ -53,18 +62,42 @@ st.markdown("""
 
     /* ── STICKY BOTTOM NAV BAR ── */
     .bottom-nav {
-        position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-        background: #121212; border-top: 1px solid #2f3136;
-        display: flex; justify-content: space-around; align-items: center;
-        z-index: 9999; padding-bottom: env(safe-area-inset-bottom); /* Fix per iPhone */
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.6);
+position: fixed;
+        bottom: 20px; 
+        left: 50%;
+        transform: translateX(-50%); 
+        width: 90%; 
+        max-width: 450px;
+        height: 65px;
+        background: rgba(18, 18, 18, 0.95);
+        backdrop-filter: blur(10px); 
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 40px; 
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 9999;
+        padding: 0 15px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5)
     }
     .nav-item {
-        display: flex; flex-direction: column; align-items: center;
-        text-decoration: none; color: #8e9297; flex: 1; transition: 0.2s;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-decoration: none !important; 
+        border-bottom: none !important;   
+        color: #8e9297 !important; 
+        flex: 1; transition: all 0.2s ease-in-out;
+        height: 100%;
     }
-    .nav-item:active { transform: scale(0.9); color: #5865F2; }
-    .nav-icon { font-size: 20px; margin-bottom: 2px; }
+    /* Effetto al tocco (Mobile) o al passaggio del mouse (Desktop) */
+    .nav-item:hover, .nav-item:active, .nav-item:focus { 
+        color: #5865F2 !important; 
+        transform: translateY(-2px); 
+    }
+    .nav-item:hover .nav-icon, .nav-item:active .nav-icon, .nav-item:focus .nav-icon {
+        filter: drop-shadow(0 0 6px rgba(88,101,242,0.6));
+    }
+    
+    .nav-icon { font-size: 20px; margin-bottom: 2px; transition: 0.2s; }
     .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ── TABELLE E COMPONENTI ── */
@@ -98,8 +131,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
-#  2. MENU DI NAVIGAZIONE INFERIORE (HTML/CSS)
+#  2. MENU DI NAVIGAZIONE INFERIORE
 # ──────────────────────────────────────────────
+
 st.markdown("""
 <div class="bottom-nav">
     <a href="#statistiche" class="nav-item">
@@ -112,11 +146,11 @@ st.markdown("""
     </a>
     <a href="#calendario" class="nav-item">
         <span class="nav-icon">📅</span>
-        <span class="nav-label">Calendario</span>
+        <span class="nav-label">Cal</span>
     </a>
     <a href="#previsioni" class="nav-item">
         <span class="nav-icon">🔮</span>
-        <span class="nav-label">Predict</span>
+        <span class="nav-label">Pred</span>
     </a>
 </div>
 """, unsafe_allow_html=True)
