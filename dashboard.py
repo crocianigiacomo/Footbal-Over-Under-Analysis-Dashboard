@@ -133,8 +133,9 @@ st.markdown("""
         .section-title, .section-title-red, .section-title-blue { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
         .cal-table td, .cal-table th { font-size: 13px !important; padding: 8px 5px !important; }
     }
-
+            
     footer, #MainMenu { visibility: hidden; }
+     
 </style>
 """, unsafe_allow_html=True)
 
@@ -463,4 +464,4 @@ with cp3:
 with st.spinner("Calcolo in corso..."):
     get_predictions_section(lega_pred, soglia_pred, alpha)
 
-st.markdown("<div style='text-align:center; color:#8e9297; font-size:0.8rem; margin-top:4rem;'>Play Responsibly • Mathematical Models Only</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center; color:#8e9297; font-size:0.8rem; '>──── Play Responsibly • Mathematical Models Only ────</div>", unsafe_allow_html=True)
