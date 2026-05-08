@@ -211,7 +211,7 @@ def build_stats_table(df, tipo, soglia):
             f"<td>{pct_bar_html(pct, color)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th>Esiti</th><th>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_calendario(df):
     rows = ""
@@ -226,7 +226,7 @@ def build_calendario(df):
             f"<td style='color:#8e9297;'>{dt}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Turno</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th>Data</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>Turno</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th>Data</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_prediction_table(df):
     rows = ""
@@ -264,7 +264,7 @@ def build_gol_table(df):
         )
     
     th_html = """
-        <th onclick="srt(0,false)">Squadra</th>
+        <th style='text-align:left;' onclick="srt(0,false)">Squadra</th>
         <th style='color:#1DB954; text-align:center' onclick="srt(1,true)">GFC</th>
         <th style='color:#ED4245; text-align:center' onclick="srt(2,true)">GSC</th>
         <th class='hide-mob' style='color:#1DB954; text-align:center' onclick="srt(3,true)">Med GFC</th>
