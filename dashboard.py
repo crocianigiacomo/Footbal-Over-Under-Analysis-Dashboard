@@ -456,7 +456,7 @@ st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 # SEZIONE 4: PREVISIONI
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni </div>', unsafe_allow_html=True)
 cp1, cp2, cp3 = st.columns([2, 1, 1])
-with cp1: lega_pred = st.selectbox("Lega:", options=leghe_disp, key="pred_box")
+with cp1: lega_pred = st.selectbox("Seleziona Lega:", options=leghe_disp, key="pred_box")
 with cp2: soglia_pred = _soglia_widget("Soglia Gol:", "pred_soglia")
 with cp3:
     forma = st.toggle("Forma Recente", value=True, key="forma", help="Applica un peso maggiore alle partite più recenti per stimare le forze squadra.")
