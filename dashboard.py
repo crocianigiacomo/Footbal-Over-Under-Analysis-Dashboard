@@ -42,7 +42,7 @@ st.markdown("""
 
     /* ── TITOLI PRINCIPALI ── */
     .main-title {
-        font-size: 2.5rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;
+        font-size: 3rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;
         margin-top: 1rem; margin-bottom: 0.2rem; text-align: center;
         font-family: 'Inter', sans-serif;
     }
@@ -128,8 +128,8 @@ st.markdown("""
     /* Mobile Overrides */
     @media screen and (max-width: 768px) {
         .hide-mob { display: none !important; }
-        .main-title { font-size: 1.8rem; }
-        .sub-title { font-size: 0.9rem; }
+        .main-title { font-size: 2rem; }
+        .sub-title { font-size: 1rem; }
         .section-title, .section-title-red, .section-title-blue { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
         .cal-table td, .cal-table th { font-size: 12px !important; padding: 8px 6px !important; }
         .sep-row td { font-size: 0.65rem !important; }
