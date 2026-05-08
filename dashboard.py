@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 from scipy.stats import poisson
@@ -16,19 +15,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-components.html("""
-<script>
-    var params = new URLSearchParams(window.parent.location.search);
-    if (!params.get('sw')) {
-        params.set('sw', window.innerWidth);
-        window.parent.history.replaceState({}, '', '?' + params.toString());
-        window.parent.location.reload();
-    }
-</script>
-""", height=0)
-
-screen_w = int(st.query_params.get("sw", 1200))
-is_mobile = screen_w < 768
 
 st.markdown("""
 <style>
@@ -496,58 +482,54 @@ def build_gol_table(df):
         c_style = f"color:{color}; text-align:{'left' if idx == 0 else 'center'};"
         th_html += f'<th class="{c_class}" onclick="srt({idx},{str(idx != 0).lower()})" style="{c_style}">{label}</th>\n'
 
-    return f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ background: #121212; font-family: "Inter", "Segoe UI", sans-serif; font-size: 13px; color: #dcddde; }}
-  .wrap {{ width: 100%; overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); background: #181818; }}
-  table {{ width: 100%; border-collapse: collapse; white-space: nowrap; }}
-  thead tr {{ position: sticky; top: 0; z-index: 2; }}
-  th {{ background: #202225; padding: 12px 10px; border-bottom: 2px solid #2f3136; cursor: pointer; user-select: none; font-weight: 600; font-size: 12px; transition: background 0.2s; }}
-  th:hover {{ background: #2f3136; color: #ffffff; }}
-  td {{ padding: 10px 10px; border-bottom: 1px solid #282828; }}
-  tr:hover td {{ background: #2f3136; }}
-  th:not(.sort-asc):not(.sort-desc)::after {{ content: " "; font-size: 10px; opacity: 0.35; }}
-  .sort-asc::after  {{ content: " ▲"; font-size: 10px; }}
-  .sort-desc::after {{ content: " ▼"; font-size: 10px; }}
-  @media screen and (max-width: 768px) {{
-    .hide-mob {{ display: none !important; }}
-    th, td {{ padding: 10px 6px; font-size: 11px; }}
-  }}
-</style>
-</head>
-<body>
-<div class="wrap">
-<table id="t">
-  <thead><tr>{th_html}</tr></thead>
-  <tbody>{rows}</tbody>
-</table>
-</div>
-<script>
-(function(){{
-  var d = {{}};
-  window.srt = function(col, num) {{
-    var tbl = document.getElementById('t'), tbody = tbl.querySelector('tbody'),
-        ths = tbl.querySelectorAll('thead th'), rows = Array.from(tbody.querySelectorAll('tr'));
-    d[col] = !d[col]; var asc = d[col];
-    ths.forEach(function(h){{ h.classList.remove('sort-asc','sort-desc'); }});
-    ths[col].classList.add(asc ? 'sort-asc' : 'sort-desc');
-    rows.sort(function(a, b){{
-      var va = a.cells[col] ? a.cells[col].innerText.trim() : '';
-      var vb = b.cells[col] ? b.cells[col].innerText.trim() : '';
-      if(num){{ va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }}
-      return asc ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
-    }});
-    rows.forEach(function(r){{ tbody.appendChild(r); }});
-  }};
-}})();
-</script>
-</body>
-</html>"""
+    # NELLA FUNZIONE build_gol_table(df), SOSTITUISCI IL RETURN CON:
+    return f"""
+    <div id="gol-table-container">
+    <style>
+      #gol-table-container {{ font-family: "Inter", "Segoe UI", sans-serif; font-size: 13px; color: #dcddde; }}
+      #gol-table-container .wrap {{ width: 100%; overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); background: #181818; }}
+      #gol-table-container table {{ width: 100%; border-collapse: collapse; white-space: nowrap; }}
+      #gol-table-container thead tr {{ position: sticky; top: 0; z-index: 2; }}
+      #gol-table-container th {{ background: #202225; padding: 12px 10px; border-bottom: 2px solid #2f3136; cursor: pointer; user-select: none; font-weight: 600; font-size: 12px; transition: background 0.2s; }}
+      #gol-table-container th:hover {{ background: #2f3136; color: #ffffff; }}
+      #gol-table-container td {{ padding: 10px 10px; border-bottom: 1px solid #282828; }}
+      #gol-table-container tr:hover td {{ background: #2f3136; }}
+      #gol-table-container th:not(.sort-asc):not(.sort-desc)::after {{ content: " "; font-size: 10px; opacity: 0.35; }}
+      #gol-table-container .sort-asc::after  {{ content: " ▲"; font-size: 10px; }}
+      #gol-table-container .sort-desc::after {{ content: " ▼"; font-size: 10px; }}
+      @media screen and (max-width: 768px) {{
+        #gol-table-container .hide-mob {{ display: none !important; }}
+        #gol-table-container th, #gol-table-container td {{ padding: 10px 6px; font-size: 11px; }}
+      }}
+    </style>
+    <div class="wrap">
+    <table id="gol-tbl">
+      <thead><tr>{th_html}</tr></thead>
+      <tbody>{rows}</tbody>
+    </table>
+    </div>
+    <script>
+    (function(){{
+      var d = {{}};
+      window.srt = function(col, num) {{
+        var tbl = document.getElementById('gol-tbl'), tbody = tbl.querySelector('tbody'),
+            ths = tbl.querySelectorAll('thead th'), rows = Array.from(tbody.querySelectorAll('tr'));
+        if(!tbl) return;
+        d[col] = !d[col]; var asc = d[col];
+        ths.forEach(function(h){{ h.classList.remove('sort-asc','sort-desc'); }});
+        ths[col].classList.add(asc ? 'sort-asc' : 'sort-desc');
+        rows.sort(function(a, b){{
+          var va = a.cells[col] ? a.cells[col].innerText.trim() : '';
+          var vb = b.cells[col] ? b.cells[col].innerText.trim() : '';
+          if(num){{ va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }}
+          return asc ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+        }});
+        rows.forEach(function(r){{ tbody.appendChild(r); }});
+      }};
+    }})();
+    </script>
+    </div>
+    """
 
 
 # ──────────────────────────────────────────────
@@ -753,12 +735,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Iniezione sicura del Javascript nel DOM di Streamlit
-components.html("""
+st.html("""
 <script>
-    const doc = window.parent.document;
-    const fab = doc.getElementById('mob-fab');
-    const overlay = doc.getElementById('mob-overlay');
-    const drawer = doc.getElementById('mob-drawer');
+    const fab = document.getElementById('mob-fab');
+    const overlay = document.getElementById('mob-overlay');
+    const drawer = document.getElementById('mob-drawer');
 
     if (fab && overlay && drawer) {
         // Apri il drawer e nascondi il bottone per estetica
@@ -777,25 +758,25 @@ components.html("""
 
         overlay.onclick = closeDrawer;
         
-        const closeBtn = doc.querySelector('.drawer-close');
+        const closeBtn = document.querySelector('.drawer-close');
         if (closeBtn) closeBtn.onclick = closeDrawer;
 
         // Navigazione fluida
-        const links = doc.querySelectorAll('.drawer-nav a');
+        const links = document.querySelectorAll('.drawer-nav a');
         links.forEach(link => {
             link.onclick = function(e) {
                 e.preventDefault();
                 closeDrawer();
                 const targetId = this.getAttribute('data-target');
                 setTimeout(() => {
-                    const targetEl = doc.getElementById(targetId);
+                    const targetEl = document.getElementById(targetId);
                     if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 250); // Piccolo delay per far chiudere il drawer prima dello scroll
             };
         });
     }
 </script>
-""", height=0)
+""")
 
 leghe_disp = query_leghe()
 
@@ -823,9 +804,8 @@ lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options
 with st.spinner(f"Caricamento dati {lega_sel}..."):
     df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-multiplier = 34 if is_mobile else 38
-h_iframe   = 42 + len(df_gol) * multiplier
-components.html(build_gol_table(df_gol), height=h_iframe, scrolling=False)
+# 🚀 Nessun calcolo per le altezze o iframe dinamici!
+st.html(build_gol_table(df_gol))
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
