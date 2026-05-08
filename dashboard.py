@@ -29,7 +29,7 @@ st.markdown("""
     .main-title {
         font-size: 2.5rem; font-weight: 800;
         color: #ffffff; letter-spacing: -0.5px;
-        margin-top: 1rem; margin-bottom: 0.2rem; text-align: center;
+        margin-top: 2rem; margin-bottom: 0.2rem; text-align: center;
         font-family: 'Inter', 'Segoe UI', sans-serif;
     }
     .sub-title {
