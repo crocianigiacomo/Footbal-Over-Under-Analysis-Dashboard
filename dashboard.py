@@ -50,6 +50,7 @@ st.markdown("""
         font-size: 1.1rem; color: #b3b3b3; margin-bottom: 2.5rem;
         font-weight: 500; text-align: center;
         font-family: 'Inter', sans-serif;
+            text-transform: uppercase; letter-spacing: 1px;
     }
 
     /* ── SECTION TITLES (Con offset per lo scroll) ── */
@@ -57,6 +58,7 @@ st.markdown("""
         font-size: 1.1rem; font-weight: 700; color: #ffffff;
         background: #181818; padding: 0.8rem 1rem; border-radius: 8px; 
         margin-bottom: 1.2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-transform: uppercase;
         scroll-margin-top: 30px; /* Evita che il titolo finisca sotto il bordo quando clicchi il menu */
     }
     .section-title { border-left: 4px solid #1DB954; }
@@ -116,7 +118,7 @@ st.markdown("""
     .row-silver td { background: rgba(180,180,180,0.05) !important; }
     .row-bronze td { background: rgba(180,100,40,0.06) !important; }
     .sep-row td { background: #202225 !important; color: #8e9297; font-size: 0.7rem; font-weight: 700; text-align: center; text-transform: uppercase; }
-
+    .title-row td { font-size: 1.25rem; color: #ffffff; text-transform: uppercase; padding-top: 8px !important; padding-bottom: 8px !important; text-align: center; font-weight: 700; }
     /* Barra Percentuale Custom */
     .pct-wrap { display: flex; align-items: center; gap: 6px; }
     .pct-track { width: 60px; background: #282828; height: 6px; border-radius: 3px; flex-shrink: 0; }
@@ -195,13 +197,14 @@ def build_stats_table(df, tipo, soglia):
     MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
     ROW_CLASS = {1: "row-gold", 2: "row-silver", 3: "row-bronze"}
     
+
     for rank, (_, r) in enumerate(df.iterrows(), start=1):
         if rank == 6: rows += f"<tr class='sep-row'><td colspan='5'>— Altre Squadre —</td></tr>"
         pct = r["pct"]
         color = ("#FFBB00" if pct >= 75 else "#FFD667") if is_over else ("#0080FF" if pct >= 75 else "#5AAAFA")
         row_cls = ROW_CLASS.get(rank, "")
         rank_cel = MEDALS[rank] if rank <= 3 else str(rank)
-        
+
         rows += (
             f"<tr class='{row_cls}'>"
             f"<td class='num'>{rank_cel}</td>"
@@ -211,7 +214,7 @@ def build_stats_table(df, tipo, soglia):
             f"<td>{pct_bar_html(pct, color)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-trasform: uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5'>top {tipo}</td></tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_calendario(df):
     rows = ""
