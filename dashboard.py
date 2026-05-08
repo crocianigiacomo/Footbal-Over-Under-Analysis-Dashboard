@@ -17,27 +17,23 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* ── PULIZIA TOTALE INTERFACCIA ── */
+   /* ── PULIZIA TOTALE (VERSIONE NUKE) ── */
     
-    /* Nasconde l'header superiore (Menu hamburger e pulsante Deploy) */
-    header[data-testid="stHeader"] {
-        visibility: hidden;
-        height: 0% !important;
+    /* Nasconde l'header e la decorazione superiore */
+    header[data-testid="stHeader"], [data-testid="stDecoration"] {
+        display: none !important;
     }
 
-    /* Nasconde la linea colorata decorativa in alto */
-    div[data-testid="stDecoration"] {
-        display: none;
-    }
-
-    /* Nasconde il footer "Made with Streamlit" */
+    /* Nasconde il footer standard */
     footer {
-        visibility: hidden;
+        display: none !important;
     }
 
-    /* Nasconde il widget di stato e i badge di Streamlit Cloud in basso a destra */
-    [data-testid="stStatusWidget"], 
-    .stAppDeployButton {
+    /* 🔥 TARGETING MIRATO: Nasconde "Hosted by / Created by" (Viewer Badge) */
+    /* Usiamo il selettore "inizia con" per bypassare i codici dinamici tipo __1QSob */
+    div[class^="viewerBadge"], 
+    div[class*="viewerBadge"],
+    [data-testid="stStatusWidget"] {
         display: none !important;
     }
             
