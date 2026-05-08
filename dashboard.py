@@ -107,10 +107,11 @@ st.markdown("""
     .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ── TABELLE E COMPONENTI ── */
-    .tbl-scroll { border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #181818; }
-    .cal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #dcddde; }
+    .tbl-scroll { border-radius: 8px; overflow-x: auto; overflow-y: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #181818; padding: 0; margin: 0; }
+    .cal-table { width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; font-size: 0.85rem; color: #dcddde; }
     .cal-table th { background: #202225; color: #b3b3b3; padding: 12px; text-align: left; border-bottom: 1px solid #2f3136; }
     .cal-table td { padding: 10px; border-bottom: 1px solid #282828; }
+    .cal-table tbody tr:last-child td { border-bottom: none; }
     .cal-table tr:hover td { background: #2f3136; }
     .num { text-align: center !important; }
 
@@ -132,6 +133,7 @@ st.markdown("""
         .sub-title { font-size: 0.9rem; }
         .section-title, .section-title-red, .section-title-blue { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
         .cal-table td, .cal-table th { font-size: 13px !important; padding: 8px 5px !important; }
+        
     }
 
     footer, #MainMenu { visibility: hidden; }
@@ -217,7 +219,7 @@ def build_stats_table(df, tipo, soglia):
             f"<td>{pct_bar_html(pct, color)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5'>top {tipo}</td></tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5'>top {tipo}</td></tr><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_calendario(df):
     rows = ""
@@ -287,10 +289,15 @@ def build_gol_table(df):
     <div id="gol-table-container">
     <style>
       #gol-table-container .wrap {{ width:100%; overflow-x:auto; border-radius:8px; background:#181818; }}
-      #gol-table-container table {{ width:100%; border-collapse:collapse; white-space:nowrap; font-size:13px; }}
+      #gol-table-container table {{ width:100%; border-collapse:collapse; white-space:nowrap; font-size:13px; table-layout:fixed; }}
+      #gol-table-container th, #gol-table-container td {{ word-break:break-word; }}
       #gol-table-container th {{ background:#202225; padding:12px; border-bottom:2px solid #2f3136; cursor:pointer; user-select:none; }}
       #gol-table-container td {{ padding:10px; border-bottom:1px solid #282828; color:#dcddde; }}
       #gol-table-container tr:hover td {{ background:#2f3136; }}
+      @media screen and (max-width: 768px) {{
+        #gol-table-container .wrap {{ overflow-x:hidden; }}
+        #gol-table-container table {{ width:auto !important; white-space:normal !important; table-layout:auto !important; }}
+      }}
     </style>
     <div class="wrap">
       <table id="gol-tbl"><thead><tr>{th_html}</tr></thead><tbody>{rows}</tbody></table>
