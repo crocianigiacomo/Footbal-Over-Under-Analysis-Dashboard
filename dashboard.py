@@ -7,7 +7,7 @@ from datetime import datetime
 import query
 
 # ──────────────────────────────────────────────
-#  CONFIG PAGINA E TEMA
+#  1. CONFIGURAZIONE PAGINA E TEMA CSS
 # ──────────────────────────────────────────────
 st.set_page_config(
     page_title="XG Football Analytics",
@@ -15,17 +15,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-
 st.markdown("""
 <style>
+    /* Spaziature generali Streamlit */
     [data-testid="stVerticalBlock"] > div { gap: 0.5rem !important; }
-
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 2rem !important;
     }
 
-    /* ── TITOLI ── */
+    /* ── TITOLI PRINCIPALI ── */
     .main-title {
         font-size: 2.5rem; font-weight: 800;
         color: #ffffff; letter-spacing: -0.5px;
@@ -38,101 +37,29 @@ st.markdown("""
         font-family: 'Inter', 'Segoe UI', sans-serif;
     }
 
-    /* ── SECTION TITLES ── */
-    .section-title {
+    /* ── TITOLI SEZIONI ── */
+    .section-title, .section-title-red, .section-title-blue {
         font-size: 1.1rem; font-weight: 700; color: #ffffff;
-        background: #181818; border-left: 4px solid #1DB954;
-        padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
+        background: #181818; padding: 0.6rem 1rem; 
+        border-radius: 6px; margin-bottom: 1rem;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        scroll-margin-top: 20px; /* offset drawer */
     }
-    .section-title-red {
-        font-size: 1.1rem; font-weight: 700; color: #ffffff;
-        background: #181818; border-left: 4px solid #ED4245;
-        padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        scroll-margin-top: 20px;
-    }
-    .section-title-blue {
-        font-size: 1.1rem; font-weight: 700; color: #ffffff;
-        background: #181818; border-left: 4px solid #5865F2;
-        padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        scroll-margin-top: 20px;
-    }
+    .section-title { border-left: 4px solid #1DB954; }
+    .section-title-red { border-left: 4px solid #ED4245; }
+    .section-title-blue { border-left: 4px solid #5865F2; }
 
-    /* ── FAB + DRAWER  ── */
-    #mob-fab, #mob-overlay, #mob-drawer { 
-        display: none !important; 
-    }
-
-    @media screen and (max-width: 768px) {
-        #mob-fab {
-            display: flex !important; align-items: center; justify-content: center;
-            position: fixed; bottom: 70px; right: 10px; z-index: 999999;
-            width: 52px; height: 52px; border-radius: 50%;
-            background: #5865F2;
-            box-shadow: 0 4px 16px rgba(88,101,242,0.55);
-            font-size: 22px; cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            user-select: none;
-        }
-        #mob-fab:active { transform: scale(0.92); }
-
-        #mob-overlay {
-            display: none; position: fixed; inset: 0; z-index: 999998;
-            background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
-        }
-        #mob-overlay.open { display: block !important; }
-
-        #mob-drawer {
-            position: fixed; top: 0; right: -290px; z-index: 999999;
-            width: 275px; height: 100dvh;
-            background: #181818; border-left: 1px solid #2f3136;
-            box-shadow: -8px 0 32px rgba(0,0,0,0.5);
-            transition: right 0.28s cubic-bezier(0.4,0,0.2,1);
-            display: flex !important; flex-direction: column; overflow: hidden;
-        }
-        #mob-drawer.open { right: 0 !important; }
-
-        .drawer-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 22px 16px 16px;
-            border-bottom: 1px solid #2f3136;
-        }
-        .drawer-header span {
-            font-size: 11px; font-weight: 700; color: #8e9297;
-            letter-spacing: 0.1em; text-transform: uppercase;
-        }
-        .drawer-close {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: #2f3136; border: none; color: #b3b3b3;
-            font-size: 16px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .drawer-close:active { background: #404249; }
-
-        .drawer-nav { display: flex; flex-direction: column; padding: 14px 12px; gap: 8px; }
-        .drawer-nav a {
-            display: flex; align-items: center; gap: 12px;
-            padding: 14px 16px; border-radius: 10px;
-            background: #202225; text-decoration: none;
-            color: #dcddde; font-size: 15px; font-weight: 600;
-            border: 1px solid #2f3136; min-height: 52px;
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .drawer-nav a .nav-icon { font-size: 20px; line-height: 1; }
-        .drawer-nav a .nav-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            margin-left: auto; flex-shrink: 0;
-        }
-        .drawer-nav a:active { background: #2f3136; border-color: #5865F2; }
-    }
-
-    /* ── DIVIDER ── */
+    /* ── LINEA DIVISORIA E BARRE PERCENTUALI ── */
     .divider { border: none; border-top: 1px solid #282828; margin: 1rem 0; }
+    
+    .pct-wrap { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .pct-track {
+        width: clamp(36px, 10vw, 100px);
+        background: #282828; height: 6px; border-radius: 3px; flex-shrink: 0;
+    }
+    .pct-label { font-weight: 600; font-size: 0.75rem; white-space: nowrap; }
 
     /* ── TABELLE GENERICHE ── */
+    .tbl-scroll { border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     .cal-table {
         width: 100%; border-collapse: separate; border-spacing: 0;
         font-size: 0.85rem; color: #dcddde; background: #181818;
@@ -147,138 +74,65 @@ st.markdown("""
     .cal-table tr:last-child td { border-bottom: none; }
     .cal-table tr:hover td { background: #2f3136; transition: background 0.2s; }
     .num { text-align: center !important; }
-    .tbl-scroll { border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-    /* ── PCT BAR ── */
-    .pct-wrap { display: flex; align-items: center; gap: 6px; min-width: 0; }
-    
-    .pct-track {
-        width: clamp(36px, 10vw, 100px);
-        background: #282828; height: 6px; border-radius: 3px; flex-shrink: 0;
-    }
-    .pct-label { font-weight: 600; font-size: 0.75rem; white-space: nowrap; }
-
-    /* ── MOBILE OVERRIDES ── */
-    @media screen and (max-width: 768px) {
-        /* Navbar occupa spazio: abbassa il contenuto principale */
-        .block-container { padding-top: 0.5rem !important; }
-
-        .hide-mob { display: none !important; }
-
-        /* FIX: 13px minimo — leggibile su qualsiasi schermo reale */
-        .cal-table td, .cal-table th {
-            padding: 8px 5px !important;
-            font-size: 13px !important;
-        }
-
-        /* Titoli più compatti su mobile */
-        .main-title { font-size: 1.7rem !important; }
-        .sub-title  { font-size: 0.95rem !important; margin-bottom: 1rem !important; }
-
-        /* Touch target minimo 44px per selectbox */
-        div[data-baseweb="select"] > div { min-height: 44px !important; }
-
-        /* Segmented control: bottoni più alti e leggibili */
-        [data-testid="stSegmentedControl"] button {
-            min-height: 44px !important;
-            font-size: 14px !important;
-            padding: 0 18px !important;
-        }
-    }
-
-    footer, #MainMenu { visibility: hidden; }
-
-    /* ── SELECTBOX DARK THEME + CURSOR FIX ── */
-    div[data-baseweb="select"] > div {
-        background: #1e1e1e !important;
-        border-color: #2f3136 !important;
-        border-radius: 8px !important;
-        transition: border-color 0.2s;
-        cursor: pointer !important;
-    }
-    div[data-baseweb="select"] > div:hover { border-color: #5865F2 !important; }
-    /* FIX: impedisce che l'input interno mostri il cursore testo */
-    div[data-baseweb="select"] input,
-    div[data-baseweb="select"] [role="combobox"],
-    div[data-baseweb="select"] * { cursor: pointer !important; user-select: none !important; }
-    div[data-baseweb="select"] svg { color: #b3b3b3 !important; }
-    [data-baseweb="menu"] {
-        background: #1e1e1e !important;
-        border: 1px solid #2f3136 !important;
-        border-radius: 8px !important;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
-    }
-    [data-baseweb="option"] { background: #1e1e1e !important; color: #dcddde !important; cursor: pointer !important; }
-    [data-baseweb="option"]:hover { background: #2f3136 !important; }
-
-    /* ── SEGMENTED CONTROL DARK THEME ── */
-    [data-testid="stSegmentedControl"] > div {
-        background: #1e1e1e !important;
-        border: 1px solid #2f3136 !important;
-        border-radius: 8px !important;
-        padding: 3px !important;
-        gap: 3px !important;
-    }
-    [data-testid="stSegmentedControl"] button {
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        color: #8e9297 !important;
-        transition: background 0.2s, color 0.2s !important;
-        border: none !important;
-    }
-    [data-testid="stSegmentedControl"] button[aria-selected="true"] {
-        background: #5865F2 !important;
-        color: #ffffff !important;
-        box-shadow: 0 2px 8px rgba(88,101,242,0.4) !important;
-    }
-
-    /* ── LABEL WIDGET ── */
-    [data-testid="stWidgetLabel"] p {
-        color: #b3b3b3 !important;
-        font-size: 0.8rem !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.04em !important;
-        text-transform: uppercase !important;
-    }
-
-    /* ── GERARCHIA RIGHE TABELLA ── */
-    .row-gold   td { background: rgba(255,187,0,0.07) !important; }
+    /* ── GERARCHIA RIGHE TABELLA E MEDAGLIE ── */
+    .row-gold td { background: rgba(255,187,0,0.07) !important; }
     .row-silver td { background: rgba(180,180,180,0.05) !important; }
     .row-bronze td { background: rgba(180,100,40,0.06) !important; }
-    .row-gold:hover   td { background: rgba(255,187,0,0.13) !important; }
+    .row-gold:hover td { background: rgba(255,187,0,0.13) !important; }
     .row-silver:hover td { background: rgba(180,180,180,0.10) !important; }
     .row-bronze:hover td { background: rgba(180,100,40,0.11) !important; }
     .rank-badge { display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
     .sep-row td {
-        padding: 4px 12px !important;
-        background: #202225 !important;
-        color: #8e9297 !important;
-        font-size: 0.7rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.08em !important;
+        padding: 4px 12px !important; background: #202225 !important;
+        color: #8e9297 !important; font-size: 0.7rem !important;
+        font-weight: 700 !important; letter-spacing: 0.08em !important;
         text-transform: uppercase !important;
-        border-top: 1px solid #2f3136 !important;
-        border-bottom: 1px solid #2f3136 !important;
+        border-top: 1px solid #2f3136 !important; border-bottom: 1px solid #2f3136 !important;
     }
+
+    /* ── MOBILE OVERRIDES ── */
+    @media screen and (max-width: 768px) {
+        .block-container { padding-top: 0.5rem !important; }
+        .hide-mob { display: none !important; }
+        .cal-table td, .cal-table th { padding: 8px 5px !important; font-size: 13px !important; }
+        .main-title { font-size: 1.7rem !important; }
+        .sub-title  { font-size: 0.95rem !important; margin-bottom: 1rem !important; }
+        div[data-baseweb="select"] > div { min-height: 44px !important; }
+        [data-testid="stSegmentedControl"] button { min-height: 44px !important; font-size: 14px !important; padding: 0 18px !important; }
+    }
+
+    footer, #MainMenu { visibility: hidden; }
+
+    /* ── STILI WIDGET STREAMLIT (SELECTBOX & SEGMENTED CONTROL) ── */
+    div[data-baseweb="select"] > div { background: #1e1e1e !important; border-color: #2f3136 !important; border-radius: 8px !important; cursor: pointer !important; }
+    div[data-baseweb="select"] > div:hover { border-color: #5865F2 !important; }
+    div[data-baseweb="select"] input, div[data-baseweb="select"] [role="combobox"], div[data-baseweb="select"] * { cursor: pointer !important; user-select: none !important; }
+    div[data-baseweb="select"] svg { color: #b3b3b3 !important; }
+    [data-baseweb="menu"] { background: #1e1e1e !important; border: 1px solid #2f3136 !important; border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important; }
+    [data-baseweb="option"] { background: #1e1e1e !important; color: #dcddde !important; cursor: pointer !important; }
+    [data-baseweb="option"]:hover { background: #2f3136 !important; }
+    
+    [data-testid="stSegmentedControl"] > div { background: #1e1e1e !important; border: 1px solid #2f3136 !important; border-radius: 8px !important; padding: 3px !important; gap: 3px !important; }
+    [data-testid="stSegmentedControl"] button { border-radius: 6px !important; font-weight: 600 !important; color: #8e9297 !important; transition: background 0.2s, color 0.2s !important; border: none !important; }
+    [data-testid="stSegmentedControl"] button[aria-selected="true"] { background: #5865F2 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(88,101,242,0.4) !important; }
+    [data-testid="stWidgetLabel"] p { color: #b3b3b3 !important; font-size: 0.8rem !important; font-weight: 600 !important; letter-spacing: 0.04em !important; text-transform: uppercase !important; }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ──────────────────────────────────────────────
-#  CONNESSIONE DB E DATI (con cache TTL)
+#  2. CONNESSIONE E HELPERS DATI
 # ──────────────────────────────────────────────
 conn = st.connection("calcio_db", type="sql", url="sqlite:///calcio.db")
 
-
+@st.cache_data(ttl=3600)
 def query_leghe():
-    """Lista leghe disponibili — cached 1 ora."""
-    return conn.query(query.LISTA_LEGHE_SQL, ttl=3600)["lega"].tolist()
+    """Recupera la lista delle leghe dal DB."""
+    return conn.query(query.LISTA_LEGHE_SQL)["lega"].tolist()
 
-
-# ──────────────────────────────────────────────
-#  HELPERS SOGLIA: evita deselect di segmented_control
-# ──────────────────────────────────────────────
 def _soglia_widget(label: str, key: str) -> float:
+    """Gestisce il widget della soglia evitando reset indesiderati in Streamlit."""
     ss_key = f"_soglia_val_{key}"
     if ss_key not in st.session_state:
         st.session_state[ss_key] = 2.5
@@ -287,7 +141,6 @@ def _soglia_widget(label: str, key: str) -> float:
         st.session_state[key] = st.session_state[ss_key]
 
     val = st.segmented_control(label, options=[2.5, 3.5], key=key)
-
     if val is not None:
         st.session_state[ss_key] = val
 
@@ -295,8 +148,41 @@ def _soglia_widget(label: str, key: str) -> float:
 
 
 # ──────────────────────────────────────────────
-#  HELPERS HTML (GENERATORI TABELLE)
+#  3. GENERATORI COMPONENTI HTML / SVG
 # ──────────────────────────────────────────────
+EMPTY_CALENDAR_SVG = """
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="14" width="48" height="42" rx="6" stroke="#5865F2" stroke-width="2.5"/>
+  <line x1="8" y1="26" x2="56" y2="26" stroke="#5865F2" stroke-width="2.5"/>
+  <rect x="20" y="8" width="4" height="12" rx="2" fill="#5865F2"/>
+  <rect x="40" y="8" width="4" height="12" rx="2" fill="#5865F2"/>
+  <circle cx="22" cy="38" r="3" fill="#8e9297"/>
+  <circle cx="32" cy="38" r="3" fill="#8e9297"/>
+  <circle cx="42" cy="38" r="3" fill="#8e9297"/>
+  <circle cx="22" cy="48" r="3" fill="#8e9297"/>
+  <circle cx="32" cy="48" r="3" fill="#8e9297"/>
+</svg>"""
+
+EMPTY_PRED_SVG = """
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="32" cy="32" r="22" stroke="#ED4245" stroke-width="2.5"/>
+  <path d="M32 20 L36 28 L45 29 L38 36 L40 45 L32 41 L24 45 L26 36 L19 29 L28 28 Z" stroke="#ED4245" stroke-width="2" stroke-linejoin="round"/>
+  <line x1="32" y1="8" x2="32" y2="4" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="32" y1="60" x2="32" y2="56" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="8" y1="32" x2="4" y2="32" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="60" y1="32" x2="56" y2="32" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
+</svg>"""
+
+def empty_state(icon_svg: str, title: str, subtitle: str) -> str:
+    return f"""
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+        padding:3rem 2rem;border-radius:12px;background:#181818;border:1px dashed #2f3136;
+        text-align:center;gap:1rem;">
+        <div style="opacity:0.5">{icon_svg}</div>
+        <div style="color:#ffffff;font-weight:700;font-size:1rem">{title}</div>
+        <div style="color:#8e9297;font-size:0.85rem;max-width:320px;line-height:1.5">{subtitle}</div>
+    </div>"""
+
 def pct_bar(value, color):
     return (
         f'<div class="pct-wrap">'
@@ -307,23 +193,23 @@ def pct_bar(value, color):
         f'</div>'
     )
 
-
 def build_stats_table(df, tipo, soglia):
     rows = ""
-    is_over = tipo == "over"
+    is_over = (tipo == "over")
     val_col = "n_over" if is_over else "n_under"
-    MEDALS    = {1: "🥇", 2: "🥈", 3: "🥉"}
+    MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
     ROW_CLASS = {1: "row-gold", 2: "row-silver", 3: "row-bronze"}
     ncols = 5
 
     for rank, (_, r) in enumerate(df.iterrows(), start=1):
         if rank == 6:
             rows += f"<tr class='sep-row'><td colspan='{ncols}'>— Altre squadre —</td></tr>"
-        pct      = r["pct"]
-        color    = ("#FFBB00" if pct >= 75 else "#FFD667" if pct >= 60 else "#FFE9AB") if is_over \
-                   else ("#0080FF" if pct >= 75 else "#5AAAFA" if pct >= 60 else "#9ECEFF")
-        row_cls  = ROW_CLASS.get(rank, "")
+        pct = r["pct"]
+        color = ("#FFBB00" if pct >= 75 else "#FFD667" if pct >= 60 else "#FFE9AB") if is_over \
+                else ("#0080FF" if pct >= 75 else "#5AAAFA" if pct >= 60 else "#9ECEFF")
+        row_cls = ROW_CLASS.get(rank, "")
         rank_cel = f"<span class='rank-badge'>{MEDALS[rank]}</span>" if rank <= 3 else str(rank)
+        
         rows += (
             f"<tr class='{row_cls}'>"
             f"<td class='num'>{rank_cel}</td>"
@@ -346,7 +232,6 @@ def build_stats_table(df, tipo, soglia):
         f"</tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
-
 
 def build_calendario(df):
     rows = ""
@@ -379,7 +264,6 @@ def build_calendario(df):
         f"<tbody>{rows}</tbody></table></div>"
     )
 
-
 def build_prediction_table(df):
     rows = ""
     for _, r in df.iterrows():
@@ -406,42 +290,6 @@ def build_prediction_table(df):
         "</tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
-
-
-def empty_state(icon_svg: str, title: str, subtitle: str) -> str:
-    return f"""
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-        padding:3rem 2rem;border-radius:12px;background:#181818;border:1px dashed #2f3136;
-        text-align:center;gap:1rem;">
-        <div style="opacity:0.5">{icon_svg}</div>
-        <div style="color:#ffffff;font-weight:700;font-size:1rem">{title}</div>
-        <div style="color:#8e9297;font-size:0.85rem;max-width:320px;line-height:1.5">{subtitle}</div>
-    </div>"""
-
-EMPTY_CALENDAR_SVG = """
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="14" width="48" height="42" rx="6" stroke="#5865F2" stroke-width="2.5"/>
-  <line x1="8" y1="26" x2="56" y2="26" stroke="#5865F2" stroke-width="2.5"/>
-  <rect x="20" y="8" width="4" height="12" rx="2" fill="#5865F2"/>
-  <rect x="40" y="8" width="4" height="12" rx="2" fill="#5865F2"/>
-  <circle cx="22" cy="38" r="3" fill="#8e9297"/>
-  <circle cx="32" cy="38" r="3" fill="#8e9297"/>
-  <circle cx="42" cy="38" r="3" fill="#8e9297"/>
-  <circle cx="22" cy="48" r="3" fill="#8e9297"/>
-  <circle cx="32" cy="48" r="3" fill="#8e9297"/>
-</svg>"""
-
-EMPTY_PRED_SVG = """
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="32" cy="32" r="22" stroke="#ED4245" stroke-width="2.5"/>
-  <path d="M32 20 L36 28 L45 29 L38 36 L40 45 L32 41 L24 45 L26 36 L19 29 L28 28 Z"
-        stroke="#ED4245" stroke-width="2" stroke-linejoin="round"/>
-  <line x1="32" y1="8" x2="32" y2="4" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="32" y1="60" x2="32" y2="56" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="8" y1="32" x2="4" y2="32" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="60" y1="32" x2="56" y2="32" stroke="#ED4245" stroke-width="2.5" stroke-linecap="round"/>
-</svg>"""
-
 
 def build_gol_table(df):
     rows = ""
@@ -482,7 +330,6 @@ def build_gol_table(df):
         c_style = f"color:{color}; text-align:{'left' if idx == 0 else 'center'};"
         th_html += f'<th class="{c_class}" onclick="srt({idx},{str(idx != 0).lower()})" style="{c_style}">{label}</th>\n'
 
-    # NELLA FUNZIONE build_gol_table(df), SOSTITUISCI IL RETURN CON:
     return f"""
     <div id="gol-table-container">
     <style>
@@ -533,7 +380,7 @@ def build_gol_table(df):
 
 
 # ──────────────────────────────────────────────
-#  LOGICA PREVISIONI E POISSON
+#  4. LOGICA PREVISIONI E MODELLO MATEMATICO
 # ──────────────────────────────────────────────
 def dixon_coles_correction(h, a, exp_h, exp_a, rho):
     if   h == 0 and a == 0: return max(1e-9, 1 - (exp_h * exp_a * rho))
@@ -542,56 +389,44 @@ def dixon_coles_correction(h, a, exp_h, exp_a, rho):
     elif h == 1 and a == 1: return max(1e-9, 1 - rho)
     else: return 1.0
 
-
 def compute_weighted_strengths(df: pd.DataFrame, alpha: float):
-    """
-    Calcola forza attacco/difesa con peso esponenziale decrescente per giornata.
-
-    w(g) = exp(-alpha * (max_giornata - g))
-
-    alpha = 0.0 → tutte le partite pesano uguale (media semplice)
-    alpha = 0.1 → decadimento morbido
-    alpha = 0.3 → solo le ultime giornate contano davvero
-
-    Restituisce: (strengths_df, avg_home_league, avg_away_league)
-    """
     df = df.copy()
     max_g = df['giornata'].max()
     df['w'] = np.exp(-alpha * (max_g - df['giornata']))
 
-    tot_w        = df['w'].sum()
-    avg_home_lge = (df['gol_casa']      * df['w']).sum() / tot_w
+    tot_w = df['w'].sum()
+    avg_home_lge = (df['gol_casa'] * df['w']).sum() / tot_w
     avg_away_lge = (df['gol_trasferta'] * df['w']).sum() / tot_w
 
     teams = sorted(set(df['squadra_casa']) | set(df['squadra_trasferta']))
     records = []
+    
     for team in teams:
-        hm = df[df['squadra_casa']      == team]
+        hm = df[df['squadra_casa'] == team]
         am = df[df['squadra_trasferta'] == team]
         wh, wa = hm['w'].sum(), am['w'].sum()
+        
         if wh == 0 or wa == 0:
             continue
+            
         records.append({
             'squadra': team,
-            'avg_gfc': (hm['gol_casa']      * hm['w']).sum() / wh,
+            'avg_gfc': (hm['gol_casa'] * hm['w']).sum() / wh,
             'avg_gsc': (hm['gol_trasferta'] * hm['w']).sum() / wh,
             'avg_gft': (am['gol_trasferta'] * am['w']).sum() / wa,
-            'avg_gst': (am['gol_casa']      * am['w']).sum() / wa,
+            'avg_gst': (am['gol_casa'] * am['w']).sum() / wa,
         })
 
     return pd.DataFrame(records).set_index('squadra'), avg_home_lge, avg_away_lge
 
-
-def estimate_rho(df: pd.DataFrame, strengths: pd.DataFrame,
-                 avg_home_lge: float, avg_away_lge: float, alpha: float) -> float:
-
+def estimate_rho(df: pd.DataFrame, strengths: pd.DataFrame, avg_home_lge: float, avg_away_lge: float, alpha: float) -> float:
     df = df.copy()
     max_g = df['giornata'].max()
     df['w'] = np.exp(-alpha * (max_g - df['giornata']))
     low = df[(df['gol_casa'] <= 1) & (df['gol_trasferta'] <= 1)]
 
     if len(low) < 5:
-        return -0.15  # fallback con pochi dati
+        return -0.15
 
     def neg_ll(rho):
         ll = 0.0
@@ -601,49 +436,41 @@ def estimate_rho(df: pd.DataFrame, strengths: pd.DataFrame,
                 continue
             exp_h = strengths.loc[sh, 'avg_gfc'] * strengths.loc[sa, 'avg_gst'] / avg_away_lge
             exp_a = strengths.loc[sa, 'avg_gft'] * strengths.loc[sh, 'avg_gsc'] / avg_home_lge
-            tau   = dixon_coles_correction(int(row['gol_casa']), int(row['gol_trasferta']),
-                                           exp_h, exp_a, rho)
+            tau = dixon_coles_correction(int(row['gol_casa']), int(row['gol_trasferta']), exp_h, exp_a, rho)
             ll += row['w'] * np.log(max(tau, 1e-9))
         return -ll
 
     result = minimize_scalar(neg_ll, bounds=(-0.5, 0.1), method='bounded')
     return round(result.x, 4) if result.success else -0.15
 
-
 def get_predictions_section(lega: str, soglia: float, alpha: float):
-    # 1. Dati grezzi (non cached per alpha variabile)
     df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": lega}, ttl=3600)
 
     if df_raw.empty or len(df_raw) < 10:
         st.markdown(
-            empty_state(EMPTY_PRED_SVG, "Dati insufficienti",
-                        "Non ci sono abbastanza partite storiche per calcolare le previsioni."),
+            empty_state(EMPTY_PRED_SVG, "Dati insufficienti", "Non ci sono abbastanza partite storiche per calcolare le previsioni."),
             unsafe_allow_html=True
         )
         return
 
-    # 2. Forze ponderate + stima rho
     strengths, avg_home_lge, avg_away_lge = compute_weighted_strengths(df_raw, alpha)
     rho = estimate_rho(df_raw, strengths, avg_home_lge, avg_away_lge, alpha)
 
-    # 3. Calendario
     df_n = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega}, ttl=3600)
+    
     if df_n.empty:
         st.markdown(
-            empty_state(EMPTY_CALENDAR_SVG, "Nessuna partita futura",
-                        "Non sono presenti match futuri in calendario per questa lega."),
+            empty_state(EMPTY_CALENDAR_SVG, "Nessuna partita futura", "Non sono presenti match futuri in calendario per questa lega."),
             unsafe_allow_html=True
         )
         return
 
     df_n['data_ora'] = pd.to_datetime(df_n['data_ora'])
-    prox    = df_n.sort_values('data_ora').iloc[0]['giornata']
+    prox = df_n.sort_values('data_ora').iloc[0]['giornata']
     matches = df_n[df_n['giornata'] == prox]
-
 
     st.write(f"#### 📅 Turno in analisi: Giornata {prox}")
 
-    # 5. Calcolo Poisson + Dixon-Coles
     preds_data = []
     for _, m in matches.iterrows():
         h, a = m['squadra_casa'], m['squadra_trasferta']
@@ -659,14 +486,14 @@ def get_predictions_section(lega: str, soglia: float, alpha: float):
                 p = poisson.pmf(ih, exp_h) * poisson.pmf(ia, exp_a)
                 p *= dixon_coles_correction(ih, ia, exp_h, exp_a, rho)
                 if (ih + ia) > soglia:
-                    prob_over_raw  += p
+                    prob_over_raw += p
                 else:
                     prob_under_raw += p
 
         tot = prob_over_raw + prob_under_raw
-        if tot == 0:
-            continue
-        prob_o = round((prob_over_raw  / tot) * 100, 1)
+        if tot == 0: continue
+        
+        prob_o = round((prob_over_raw / tot) * 100, 1)
         prob_u = round((prob_under_raw / tot) * 100, 1)
 
         if prob_o > prob_u:
@@ -677,106 +504,29 @@ def get_predictions_section(lega: str, soglia: float, alpha: float):
             color = "#0080FF" if prob_u >= 85 else "#5AAAFA" if prob_u >= 65 else "#9ECEFF"
 
         preds_data.append({
-            "Partita":              f"{h} vs {a}",
-            "Gol Attesi Casa":      round(exp_h, 2),
+            "Partita": f"{h} vs {a}",
+            "Gol Attesi Casa": round(exp_h, 2),
             "Gol Attesi Trasferta": round(exp_a, 2),
-            "Gol Attesi Totali":    round(exp_h + exp_a, 2),
-            "Esito":                label,
-            "Prob %":               prob,
-            "Colore":               color,
+            "Gol Attesi Totali": round(exp_h + exp_a, 2),
+            "Esito": label,
+            "Prob %": prob,
+            "Colore": color,
         })
 
     if preds_data:
         st.markdown(build_prediction_table(pd.DataFrame(preds_data)), unsafe_allow_html=True)
     else:
         st.markdown(
-            empty_state(EMPTY_PRED_SVG, "Previsioni non disponibili",
-                        "Alcune squadre del prossimo turno non hanno dati storici sufficienti."),
+            empty_state(EMPTY_PRED_SVG, "Previsioni non disponibili", "Alcune squadre del prossimo turno non hanno dati storici sufficienti."),
             unsafe_allow_html=True
         )
 
 
 # ──────────────────────────────────────────────
-#  LAYOUT INTERFACCIA PRINCIPALE
+#  5. LAYOUT E INTERFACCIA PRINCIPALE
 # ──────────────────────────────────────────────
 st.markdown('<div class="main-title">XG Football Analytics</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Advanced Data & Predictions System</div>', unsafe_allow_html=True)
-
-# FAB + drawer 
-st.markdown("""
-<div id="mob-fab">☰</div>
-
-<div id="mob-overlay"></div>
-
-<div id="mob-drawer">
-  <div class="drawer-header">
-    <span>Navigazione</span>
-    <button class="drawer-close">✕</button>
-  </div>
-  <nav class="drawer-nav">
-    <a data-target="statistiche">
-      <span class="nav-icon">📊</span> Top Statistiche
-      <span class="nav-dot" style="background:#1DB954"></span>
-    </a>
-    <a data-target="reti">
-      <span class="nav-icon">🎯</span> Performance Reti
-      <span class="nav-dot" style="background:#5865F2"></span>
-    </a>
-    <a data-target="calendario">
-      <span class="nav-icon">📅</span> Calendario
-      <span class="nav-dot" style="background:#5865F2"></span>
-    </a>
-    <a data-target="previsioni">
-      <span class="nav-icon">🔮</span> Previsioni
-      <span class="nav-dot" style="background:#ED4245"></span>
-    </a>
-  </nav>
-</div>
-""", unsafe_allow_html=True)
-
-# Iniezione sicura del Javascript nel DOM di Streamlit
-st.html("""
-<script>
-    const fab = document.getElementById('mob-fab');
-    const overlay = document.getElementById('mob-overlay');
-    const drawer = document.getElementById('mob-drawer');
-
-    if (fab && overlay && drawer) {
-        // Apri il drawer e nascondi il bottone per estetica
-        fab.onclick = function() {
-            drawer.classList.add('open');
-            overlay.classList.add('open');
-            fab.style.display = 'none'; 
-        };
-
-        // Logica per chiudere il drawer
-        const closeDrawer = function() {
-            drawer.classList.remove('open');
-            overlay.classList.remove('open');
-            fab.style.display = 'flex'; 
-        };
-
-        overlay.onclick = closeDrawer;
-        
-        const closeBtn = document.querySelector('.drawer-close');
-        if (closeBtn) closeBtn.onclick = closeDrawer;
-
-        // Navigazione fluida
-        const links = document.querySelectorAll('.drawer-nav a');
-        links.forEach(link => {
-            link.onclick = function(e) {
-                e.preventDefault();
-                closeDrawer();
-                const targetId = this.getAttribute('data-target');
-                setTimeout(() => {
-                    const targetEl = document.getElementById(targetId);
-                    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 250); // Piccolo delay per far chiudere il drawer prima dello scroll
-            };
-        });
-    }
-</script>
-""")
 
 leghe_disp = query_leghe()
 
@@ -789,13 +539,13 @@ with c1:
     with st.spinner("Caricamento Over..."):
         df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
     st.markdown(build_stats_table(df_ov, "over", soglia_stats), unsafe_allow_html=True)
+    
 with c2:
     with st.spinner("Caricamento Under..."):
         df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
     st.markdown(build_stats_table(df_un, "under", soglia_stats), unsafe_allow_html=True)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
-
 
 # --- SEZIONE 2: CLASSIFICA GOL ---
 st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e Classifica xG</div>', unsafe_allow_html=True)
@@ -804,11 +554,8 @@ lega_sel = st.selectbox("Seleziona Lega per visualizzare il dettaglio:", options
 with st.spinner(f"Caricamento dati {lega_sel}..."):
     df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 
-# 🚀 Nessun calcolo per le altezze o iframe dinamici!
 st.html(build_gol_table(df_gol))
-
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
-
 
 # --- SEZIONE 3: CALENDARIO PROSSIMO TURNO ---
 st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
@@ -824,16 +571,14 @@ if not df_next.empty:
     st.markdown(build_calendario(df_next[df_next['giornata'] == prossima_g_cal]), unsafe_allow_html=True)
 else:
     st.markdown(
-        empty_state(EMPTY_CALENDAR_SVG, "Nessuna partita in programma",
-                    f"Il calendario per {lega_cal} non contiene partite future. "
-                    "Riprova dopo l'aggiornamento del database."),
+        empty_state(EMPTY_CALENDAR_SVG, "Nessuna partita in programma", 
+                    f"Il calendario per {lega_cal} non contiene partite future. Riprova dopo l'aggiornamento del database."),
         unsafe_allow_html=True
     )
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-
-# --- SEZIONE 4: PREVISIONI ALGORITMICHE (Poisson + Dixon-Coles) ---
+# --- SEZIONE 4: PREVISIONI ALGORITMICHE ---
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni Algoritmiche</div>', unsafe_allow_html=True)
 
 c_p1, c_p2, c_p3 = st.columns([2, 1, 1])
@@ -842,13 +587,11 @@ with c_p1:
 with c_p2:
     soglia_pred = _soglia_widget("Soglia Previsione:", "pred_soglia")
 with c_p3:
-    # Toggle semplice — α consigliato in background, invisible all'utente
     forma_recente = st.toggle(
         "Forma Recente",
         value=True,
         key="forma_recente",
-        help="Attivo: le ultime partite pesano di più nel calcolo. "
-             "Disattivo: tutta la stagione vale uguale."
+        help="Attivo: le ultime partite pesano di più nel calcolo. Disattivo: tutta la stagione vale uguale."
     )
     alpha = 0.10 if forma_recente else 0.0
 
