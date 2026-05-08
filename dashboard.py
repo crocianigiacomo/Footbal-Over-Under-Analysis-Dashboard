@@ -32,7 +32,7 @@ st.markdown("""
     /* ── RESET E SCROLL SMOOTH ── */
     html { scroll-behavior: smooth; }
     
-    [data-testid="stVerticalBlock"] > div { gap: 0.5rem !important; }
+    [data-testid="stVerticalBlock"] > div { gap: 1rem !important; }
 
     /* Spazio extra sopra e sotto per non coprire i contenuti con la barra nav o il bordo */
     .block-container {
@@ -107,7 +107,7 @@ st.markdown("""
     .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ── TABELLE E COMPONENTI ── */
-    .tbl-scroll { border-radius: 8px; overflow-x: auto; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #181818; }
+    .tbl-scroll { border-radius: 8px; overflow-x: auto; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #181818; margin-bottom: 1rem; }
     .cal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #dcddde; }
     .cal-table th { background: #202225; color: #b3b3b3; padding: 12px; text-align: left; border-bottom: 1px solid #2f3136; }
     .cal-table td { padding: 10px; border-bottom: 1px solid #282828; }
@@ -132,7 +132,6 @@ st.markdown("""
         .sub-title { font-size: 0.9rem; }
         .section-title, .section-title-red, .section-title-blue { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
         .cal-table td, .cal-table th { font-size: 13px !important; padding: 8px 5px !important; }
-        
     }
 
     footer, #MainMenu { visibility: hidden; }
@@ -410,7 +409,7 @@ def get_predictions_section(lega, soglia, alpha):
             "Partita": f"{h} vs {a}", "Gol Attesi Casa": round(exph, 2), "Gol Attesi Trasferta": round(expa, 2),
             "Gol Attesi Totali": round(exph+expa, 2), "Esito": res_label, "Prob %": prob, "Colore": color
         })
-    if preds: st.markdown(build_prediction_table(pd.DataFrame(preds)), unsafe_allow_html=True)
+    if preds: st.html(build_prediction_table(pd.DataFrame(preds)))
 
 
 # ──────────────────────────────────────────────
@@ -427,10 +426,10 @@ soglia_stats = _soglia_widget("Soglia Gol:", "stats_soglia")
 c1, c2 = st.columns(2)
 with c1:
     df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.markdown(build_stats_table(df_ov, "over", soglia_stats), unsafe_allow_html=True)
+    st.html(build_stats_table(df_ov, "over", soglia_stats))
 with c2:
     df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.markdown(build_stats_table(df_un, "under", soglia_stats), unsafe_allow_html=True)
+    st.html(build_stats_table(df_un, "under", soglia_stats))
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
@@ -449,7 +448,7 @@ df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3
 if not df_next.empty:
     df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
     g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
-    st.markdown(build_calendario(df_next[df_next['giornata'] == g_prox]), unsafe_allow_html=True)
+    st.html(build_calendario(df_next[df_next['giornata'] == g_prox]))
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
