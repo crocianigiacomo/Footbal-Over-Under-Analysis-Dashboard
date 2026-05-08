@@ -410,7 +410,7 @@ st.markdown('<div class="sub-title">Advanced Data & Predictions System</div>', u
 leghe_disp = query_leghe()
 
 # SEZIONE 1: STATISTICHE
-st.markdown('<div id="statistiche" class="section-title">📊 Top Statistiche Globali</div>', unsafe_allow_html=True)
+st.markdown('<div id="statistiche" class="section-title">📊 Ranking </div>', unsafe_allow_html=True)
 soglia_stats = _soglia_widget("Soglia Gol:", "stats_soglia")
 c1, c2 = st.columns(2)
 with c1:
@@ -423,7 +423,7 @@ with c2:
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
 # SEZIONE 2: RETI
-st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti e Classifica xG</div>', unsafe_allow_html=True)
+st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti </div>', unsafe_allow_html=True)
 lega_sel = st.selectbox("Seleziona Lega:", options=leghe_disp, key="gol_lega")
 df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 st.html(build_gol_table(df_gol))
