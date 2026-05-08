@@ -437,7 +437,6 @@ df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3
 if not df_next.empty:
     df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
     g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
-    st.write(f"#### Giornata {g_prox}")
     st.markdown(build_calendario(df_next[df_next['giornata'] == g_prox]), unsafe_allow_html=True)
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
