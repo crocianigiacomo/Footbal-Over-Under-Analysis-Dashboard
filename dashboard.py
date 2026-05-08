@@ -111,7 +111,6 @@ st.markdown("""
     .cal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #dcddde; }
     .cal-table th { background: #202225; color: #b3b3b3; padding: 12px; text-align: left; border-bottom: 1px solid #2f3136; }
     .cal-table td { padding: 10px; border-bottom: 1px solid #282828; }
-    .cal-table tbody tr:last-child td { border-bottom: none; }
     .cal-table tr:hover td { background: #2f3136; }
     .num { text-align: center !important; }
 
