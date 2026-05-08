@@ -107,8 +107,8 @@ st.markdown("""
     .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ── TABELLE E COMPONENTI ── */
-    .tbl-scroll { border-radius: 8px; overflow-x: auto; overflow-y: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #181818; padding: 0; margin: 0; }
-    .cal-table { width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; font-size: 0.85rem; color: #dcddde; }
+    .tbl-scroll { border-radius: 8px; overflow-x: auto; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #181818; }
+    .cal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #dcddde; }
     .cal-table th { background: #202225; color: #b3b3b3; padding: 12px; text-align: left; border-bottom: 1px solid #2f3136; }
     .cal-table td { padding: 10px; border-bottom: 1px solid #282828; }
     .cal-table tbody tr:last-child td { border-bottom: none; }
