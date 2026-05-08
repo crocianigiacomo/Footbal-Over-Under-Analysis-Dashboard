@@ -131,7 +131,8 @@ st.markdown("""
         .main-title { font-size: 1.8rem; }
         .sub-title { font-size: 0.9rem; }
         .section-title, .section-title-red, .section-title-blue { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
-        .cal-table td, .cal-table th { font-size: 13px !important; padding: 8px 5px !important; }
+        .cal-table td, .cal-table th { font-size: 11px !important; padding: 6px 4px !important; }
+        .sep-row td { font-size: 0.65rem !important; }
     }
             
     footer, #MainMenu { visibility: hidden; }
