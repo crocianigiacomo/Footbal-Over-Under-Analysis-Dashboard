@@ -459,7 +459,7 @@ cp1, cp2, cp3 = st.columns([2, 1, 1])
 with cp1: lega_pred = st.selectbox("Lega:", options=leghe_disp, key="pred_box")
 with cp2: soglia_pred = _soglia_widget("Soglia Pred:", "pred_soglia")
 with cp3:
-    forma = st.toggle("Forma Recente", value=True, key="forma")
+    forma = st.toggle("Forma Recente", value=True, key="forma", help="Applica un peso maggiore alle partite più recenti per stimare le forze squadra.")
     alpha = 0.12 if forma else 0.0
 with st.spinner("Calcolo in corso..."):
     get_predictions_section(lega_pred, soglia_pred, alpha)
