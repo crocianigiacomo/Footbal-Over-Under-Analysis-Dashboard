@@ -50,7 +50,7 @@ st.markdown("""
         font-size: 1.1rem; color: #b3b3b3; margin-bottom: 2.5rem;
         font-weight: 500; text-align: center;
         font-family: 'Inter', sans-serif;
-            text-transform: uppercase; letter-spacing: 1px;
+            text-transform: uppercase;
     }
 
     /* ── SECTION TITLES (Con offset per lo scroll) ── */
@@ -59,7 +59,8 @@ st.markdown("""
         background: #181818; padding: 0.8rem 1rem; border-radius: 8px; 
         margin-bottom: 1.2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         text-transform: uppercase;
-        scroll-margin-top: 30px; /* Evita che il titolo finisca sotto il bordo quando clicchi il menu */
+        font-family: 'Inter', sans-serif;
+        scroll-margin-top: 30px;
     }
     .section-title { border-left: 4px solid #1DB954; }
     .section-title-red { border-left: 4px solid #ED4245; }
@@ -128,6 +129,8 @@ st.markdown("""
     @media screen and (max-width: 768px) {
         .hide-mob { display: none !important; }
         .main-title { font-size: 1.8rem; }
+        .sub-title { font-size: 0.9rem; }
+        .section-title, .section-title-red, .section-title-blue { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
         .cal-table td, .cal-table th { font-size: 13px !important; padding: 8px 5px !important; }
     }
 
