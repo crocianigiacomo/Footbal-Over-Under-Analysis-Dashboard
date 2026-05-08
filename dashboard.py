@@ -17,15 +17,30 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* Nasconde il badge "Manage App" e lo stato in basso a destra */
-    div[data-testid="stStatusWidget"], 
-    .viewerBadge_container__1QSob, 
-    .viewerBadge_link__1QSob {
-        display: none !important;
+    /* ── PULIZIA TOTALE INTERFACCIA ── */
+    
+    /* Nasconde l'header superiore (Menu hamburger e pulsante Deploy) */
+    header[data-testid="stHeader"] {
+        visibility: hidden;
+        height: 0% !important;
     }
 
-    /* Nasconde il menù hamburger in alto a destra e il footer */
-    #MainMenu, footer { visibility: hidden !important; }
+    /* Nasconde la linea colorata decorativa in alto */
+    div[data-testid="stDecoration"] {
+        display: none;
+    }
+
+    /* Nasconde il footer "Made with Streamlit" */
+    footer {
+        visibility: hidden;
+    }
+
+    /* Nasconde il widget di stato e i badge di Streamlit Cloud in basso a destra */
+    [data-testid="stStatusWidget"], 
+    .stAppDeployButton {
+        display: none !important;
+    }
+            
     /* ── RESET E SCROLL SMOOTH ── */
     html { scroll-behavior: smooth; }
     
@@ -62,7 +77,7 @@ st.markdown("""
 
     /* ── STICKY BOTTOM NAV BAR ── */
     .bottom-nav {
-position: fixed;
+        position: fixed;
         bottom: 20px; 
         left: 50%;
         transform: translateX(-50%); 
