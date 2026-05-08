@@ -211,7 +211,7 @@ def build_stats_table(df, tipo, soglia):
             f"<td>{pct_bar_html(pct, color)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-trasform: uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_calendario(df):
     rows = ""
