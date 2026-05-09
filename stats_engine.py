@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import poisson
-from scipy.optimize import minimize_scalar, minimize
+from scipy.optimize import minimize_scalar
 
 def dixon_coles_correction(h, a, exp_h, exp_a, rho):
     if h == 0 and a == 0: return max(1e-9, 1 - (exp_h * exp_a * rho))
@@ -107,8 +107,6 @@ def calibrate_alpha(df_raw):
             if past_data.empty: continue
             
             # Calcolo medie e forze con l'alpha in prova
-            # (Riutilizziamo le tue funzioni esistenti)
-            from stats_engine import compute_weighted_strengths
             try:
                 strengths, avg_h, avg_a = compute_weighted_strengths(past_data, alpha_trial)
                 h, a = match['squadra_casa'], match['squadra_trasferta']
@@ -123,11 +121,11 @@ def calibrate_alpha(df_raw):
                 
                 # Log-Loss: aggiungo -log(probabilità) [min 1e-10 per evitare log(0)]
                 total_log_loss -= np.log(max(prob_match, 1e-10))
-            except:
+            except (ValueError, KeyError, ZeroDivisionError):
                 continue
                 
         return total_log_loss
 
     # Ottimizzazione tra 0.01 (molto stabile) e 0.30 (molto reattivo alla forma)
-    res = minimize(log_loss_objective, x0=0.12, bounds=[(0.01, 0.30)], method='L-BFGS-B')
-    return round(res.x[0], 4) if res.success else 0.12
+    res = minimize_scalar(log_loss_objective, bounds=(0.01, 0.30), method='bounded')
+    return round(res.x, 4) if res.success else 0.12

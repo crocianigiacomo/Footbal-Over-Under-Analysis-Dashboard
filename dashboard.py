@@ -14,9 +14,8 @@ with open('style.css') as f:
 # 3. CONNESSIONE DB E HELPERS
 conn = st.connection("calcio_db", type="sql", url="sqlite:///calcio.db")
 
-@st.cache_data(ttl=3600)
 def query_leghe():
-    return conn.query(query.LISTA_LEGHE_SQL)["lega"].tolist()
+    return conn.query(query.LISTA_LEGHE_SQL, ttl=3600)["lega"].tolist()
 
 def _soglia_widget(label: str, key: str) -> float:
     ss_key = f"_soglia_val_{key}"

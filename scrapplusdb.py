@@ -200,7 +200,7 @@ async def main():
     cursor = conn_params.cursor()
     
     for lega in LEAGUE_FLAGS.values():
-        df_lega = pd.read_sql(f"SELECT * FROM partite WHERE lega = '{lega}'", conn_params)
+        df_lega = pd.read_sql("SELECT * FROM partite WHERE lega = ?", conn_params, params=(lega,))
         
         if not df_lega.empty:
             new_alpha = calibrate_alpha(df_lega)
