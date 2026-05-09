@@ -48,7 +48,7 @@ Una API Key (gratuita) da Football-Data.org
 Clona il repository
 ```console
 git clone https://github.com/crocianigiacomo/stats_partite_db.git
-cd xg-football-analytics
+cd stats_partite_db
 ```
 Installa le dipendenze
 ```console
