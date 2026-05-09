@@ -45,12 +45,12 @@ Una API Key (gratuita) da Football-Data.org
 
 - 2. Setup
 
-```python
+```console
 Clona il repository
 git clone https://github.com/tuo-username/xg-football-analytics.git
 cd xg-football-analytics
 ```
-```python
+```console
 Installa le dipendenze
 pip install -r requirements.txt
 ```
@@ -64,12 +64,14 @@ FOOTBALL_API_KEY=il_tuo_token_qui
 
 Esegui lo scraper per popolare il database e calibrare i parametri:
 
-Bash
+```console
 python scrapplusdb.py
-Avvia la dashboard:
+```
 
-Bash
+Avvia la dashboard:
+```console
 streamlit run dashboard.py
+```
 
 ## 🚀 Deployment & Automazione
 
@@ -87,6 +89,31 @@ Effettua il commit del file calcio.db aggiornato direttamente nel repository.
 
 ## 📂 Struttura File
 
+```console
+│   .env
+│   .gitignore
+│   calcio.db
+│   calcio.db-shm
+│   calcio.db-wal
+│   config.toml
+│   dashboard.py
+│   query.py
+│   README.md
+│   requirements.txt
+│   scrapplusdb.py
+│   stats_engine.py
+│   style.css
+│   ui_components.py
+│
+├───.github
+│   └───workflows
+│           aggiornamento.yml
+│
+└───__pycache__
+        query.cpython-314.pyc
+        stats_engine.cpython-314.pyc
+        ui_components.cpython-314.pyc
+```
 - dashboard.py: Entry point dell'applicazione.
 
 - scrapplusdb.py: Inizializzazione DB e fetching dati.
