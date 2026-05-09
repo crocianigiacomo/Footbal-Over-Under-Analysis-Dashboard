@@ -55,10 +55,15 @@ class APIRateLimiter:
         self.max_calls = max_calls
         self.period = period
         self.timestamps = []
-        self.lock = asyncio.Lock()
+        self.lock = None
+
+    async def _get_lock(self):
+        if self.lock is None:
+            self.lock = asyncio.Lock()
+        return self.lock
 
     async def wait(self):
-        async with self.lock:
+        async with await self._get_lock():
             now = time.monotonic()
             # Eliminiamo lo storico delle chiamate più vecchie del nostro periodo (es. 60 sec)
             self.timestamps = [t for t in self.timestamps if now - t < self.period]
@@ -90,7 +95,7 @@ async def fetch_league_data(session: aiohttp.ClientSession, league_code: str, ap
     
     print(f"[INFO] Fetching {LEAGUE_FLAGS[league_code]}...")
     try:
-        async with session.get(url, headers=headers, timeout=10) as response:
+        async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
             response.raise_for_status()
             data = await response.json()
             

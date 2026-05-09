@@ -37,10 +37,12 @@ st.markdown('<div id="statistiche" class="section-title">📊 Ranking </div>', u
 soglia_stats = _soglia_widget("Soglia Gol:", "stats_soglia")
 c1, c2 = st.columns(2)
 with c1:
-    df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
+    with st.spinner(""):
+        df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
     st.html(ui_components.build_stats_table(df_ov, "over", soglia_stats))
 with c2:
-    df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
+    with st.spinner(""):
+        df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
     st.html(ui_components.build_stats_table(df_un, "under", soglia_stats))
 
 st.divider()
@@ -48,7 +50,8 @@ st.divider()
 # --- SEZIONE RETI ---
 st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti </div>', unsafe_allow_html=True)
 lega_sel = st.selectbox("Seleziona Lega:", options=leghe_disp, key="gol_lega")
-df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
+with st.spinner(""):
+    df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
 st.html(ui_components.build_gol_table(df_gol))
 
 st.divider()
@@ -56,7 +59,8 @@ st.divider()
 # --- SEZIONE CALENDARIO ---
 st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
 lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
-df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
+with st.spinner(""):
+    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
 if not df_next.empty:
     df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
     g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
@@ -124,8 +128,12 @@ with st.spinner("Calcolo in corso..."):
             unsafe_allow_html=True
         )
     else:
-        st.warning("Dati insufficienti per generare le previsioni per questa lega.")
+        st.html(ui_components.build_empty_state(
+            "🔮", "Previsioni non disponibili",
+            f"Dati storici insufficienti per {lega_pred}."
+        ))
+
 st.divider()
 
 # --- SEZIONE FOOTER ---
-st.markdown('<div class="footer" style="text-align:center; font-size:1rem; color:#8e9297;">Made with ❤️ by Roosco | Data from Football-Data.org | Powered by Streamlit</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">Made with ❤️ by Roosco | Data from Football-Data.org | Powered by Streamlit</div>', unsafe_allow_html=True)

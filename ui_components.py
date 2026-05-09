@@ -108,8 +108,8 @@ def build_gol_table(df):
       #gol-table-container td {{ padding:10px; border-bottom:1px solid #282828; color:#dcddde; }}
       #gol-table-container tr:hover td {{ background:#2f3136; }}
       @media screen and (max-width: 768px) {{
-        #gol-table-container .wrap {{ overflow-x:hidden; }}
-        #gol-table-container table {{ width:auto !important; white-space:normal !important; table-layout:auto !important; }}
+        #gol-table-container .wrap {{ overflow-x:auto; -webkit-overflow-scrolling:touch; }}
+        #gol-table-container table {{ white-space:normal !important; table-layout:auto !important; }}
       }}
     </style>
     <div class="wrap">

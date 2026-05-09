@@ -7,7 +7,7 @@ header[data-testid="stHeader"],
 }
 
 /* Nasconde il footer standard */
-footer {
+footer [data-testid="stFooter"] {
   display: none !important;
 }
 
@@ -298,6 +298,13 @@ div[data-baseweb="select"] [role="combobox"] {
   font-weight: 600 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
+}
+
+.footer {
+  text-align: center;
+  font-size: 1rem;
+  color: #8e9297;
+  margin-top: 2rem;
 }
 
 footer,
