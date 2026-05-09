@@ -1,170 +1,106 @@
-# stats_partite_db
+# ⚽ XG Football Analytics
 
-Football Database Processor + Interactive Stats Dashboard
+## Advanced Data & Predictions System
 
----
+XG Football Analytics è una piattaforma di analisi predittiva progettata per analizzare i trend di rete delle principali leghe calcistiche europee. Il sistema integra uno scraper asincrono, un database SQLite ottimizzato e un motore statistico basato sulla distribuzione di Poisson con correzione Dixon-Coles.
 
-## What Is This Project?
+## 🌟 Caratteristiche Principali
 
-This project is a complete football data pipeline — from raw JSON files to an interactive web dashboard accessible from any device.
+🔮 Previsioni Evolute: Calcolo delle probabilità per Over/Under 2.5 e 3.5 basato su dati storici e performance recenti.
 
-It has two main components:
+📉 Calibrazione Alpha Automatica: Il modello calibra dinamicamente il parametro Alpha per ogni lega, pesando maggiormente la forma recente delle squadre tramite un'analisi della Log-Loss.
 
-- **`scrapplusdb.py`** — reads match data from JSON files and loads everything into a SQLite database
-- **`dashboard.py`** — a Streamlit web dashboard that visualizes the data with interactive tables and filters
+📅 Calendario Real-time: Visualizzazione automatica del prossimo turno di campionato con orari e accoppiamenti.
 
----
+📊 Analisi Granulare: Statistiche dettagliate su gol fatti e subiti (casa/trasferta) con tabelle interattive e ordinabili.
 
-## Project Structure
+🤖 Automazione Totale: Aggiornamento quotidiano del database tramite GitHub Actions.
 
-```
-stats_partite_db/
-├── calcio.db              # SQLite database (auto-generated)
-├── scrapplusdb.py         # ETL pipeline: JSON → database
-├── query.py               # SQL query library (reusable functions)
-├── dashboard.py           # Streamlit web dashboard
-├── requirements.txt       # Python dependencies
-├── .streamlit/
-│   └── config.toml        # Dark theme configuration
-└── round_1.json           # Raw match data (up to round_38.json)
-    ...
-```
+## 🏗️ Architettura Tecnica
 
----
+Il progetto è diviso in tre moduli principali per garantire scalabilità e manutenibilità:
 
-## Part 1 — Database Pipeline (scrapplusdb.py)
+- Frontend (dashboard.py): Sviluppato in Streamlit, utilizza componenti UI personalizzati (ui_components.py) e un tema Dark ottimizzato via CSS (style.css) e configurazione TOML (config.toml).
 
-### What It Does
+- Scraper Engine (scrapplusdb.py): Utilizza aiohttp per fetch asincroni e un APIRateLimiter custom per rispettare i limiti delle API di Football-Data.org. Il database SQLite opera in WAL Mode per consentire letture e scritture simultanee senza lock.
 
-- Opens football match JSON files (one per round, up to 38)
-- Checks that each match was actually played (skips postponed or not started)
-- Saves results into a structured SQLite database
-- Avoids saving the same match twice
-- Automatically calculates second half goals from total minus first half
+- Statistical Engine (stats_engine.py): Core logico che implementa la distribuzione di Poisson e la correzione di Dixon-Coles per i punteggi bassi (0-0, 1-0, 0-1, 1-1).
 
-### Database Architecture
+## 🧠 Il Modello Predittivo
 
-**File:** `calcio.db`  
-**Table:** `partite`
+Il cuore del sistema utilizza la Distribuzione di Poisson pesata nel tempo:
 
-| Column              | Description                                |
-| ------------------- | ------------------------------------------ |
-| `lega`              | League name                                |
-| `giornata`          | Matchday number                            |
-| `squadra_casa`      | Home team                                  |
-| `squadra_trasferta` | Away team                                  |
-| `gol_casa`          | Home goals (full match)                    |
-| `gol_trasferta`     | Away goals (full match)                    |
-| `gol_casa_1t`       | Home goals (first half)                    |
-| `gol_trasferta_1t`  | Away goals (first half)                    |
-| `gol_casa_2t`       | Home goals (second half — auto-calculated) |
-| `gol_trasferta_2t`  | Away goals (second half — auto-calculated) |
-| `winner_code`       | Match outcome code                         |
+- Time-Decay: Le partite più recenti hanno un peso maggiore nel calcolo delle "forze" di attacco e difesa.
 
-**Indexes created on:** `lega`, `giornata`, `squadra_casa`, `squadra_trasferta`, `winner_code`, `lega + giornata`
+- Dixon-Coles: Viene applicata una correzione per mitigare la naturale tendenza della Poisson a sottostimare la probabilità di pareggi con pochi gol.
 
-### How to Run
+- Ottimizzazione Alpha: Per ogni lega, il sistema cerca il valore di Alpha che minimizza la Log-Loss, garantendo che il modello sia sempre tarato sulle dinamiche specifiche di quel campionato.
 
-Place your JSON files in the same folder, then:
+## 🛠️ Installazione Locale
 
-```bash
-python scrapplusdb.py
-```
+- 1. Prerequisiti
 
----
+Python 3.11+
+Una API Key (gratuita) da Football-Data.org
 
-## Part 2 — Interactive Dashboard (dashboard.py)
+- 2. Setup
 
-### What It Does
+Bash
+Clona il repository
+git clone https://github.com/tuo-username/xg-football-analytics.git
+cd xg-football-analytics
 
-A dark-mode web dashboard with three sections:
-
-**Top 20 Over 2.5** — ranks the 20 teams across all leagues with the highest percentage of matches with 3 or more total goals. Includes a color-coded progress bar (green → yellow → grey based on intensity).
-
-**Top 20 Under 2.5** — same logic for matches with fewer than 3 goals. Color-coded in red/orange.
-
-**Goals by League** — select any league from a dropdown and get a full sortable table with:
-
-- Goals scored and conceded at home
-- Goals scored and conceded away
-- Average per match (home and away)
-- Total goals scored and conceded
-
-Every column header in the goals table is **clickable to sort** (ascending/descending), with arrow indicators showing the active sort direction.
-
-### Mobile Support
-
-The dashboard automatically detects screen width on load:
-
-- On **desktop** — Over and Under tables are shown side by side in two columns
-- On **mobile** (under 768px) — tables stack vertically, the goals table hides the "average" columns to keep it readable on small screens, font and padding are reduced
-
-### Technologies Used
-
-| Library                   | Purpose                                                   |
-| ------------------------- | --------------------------------------------------------- |
-| `streamlit`               | Web framework and UI rendering                            |
-| `pandas`                  | Data handling and SQL query results                       |
-| `sqlite3`                 | Database connection (standard library)                    |
-| `streamlit.components.v1` | Iframe rendering for sortable HTML tables with JavaScript |
-
-### Installation
-
-```bash
+Installa le dipendenze
 pip install -r requirements.txt
-```
 
-**requirements.txt:**
+- 3. Configurazione
+     Crea un file .env nella cartella principale:
 
-```
-streamlit>=1.35.0
-plotly>=5.20.0
-pandas>=2.0.0
-```
+Code snippet
+FOOTBALL_API_KEY=il_tuo_token_qui
 
-### How to Run
+- 4. Primo avvio
 
-```bash
+Esegui lo scraper per popolare il database e calibrare i parametri:
+
+Bash
+python scrapplusdb.py
+Avvia la dashboard:
+
+Bash
 streamlit run dashboard.py
-```
 
-Then open `http://localhost:8501` in your browser.
+## 🚀 Deployment & Automazione
 
----
+Streamlit Cloud
+Il progetto è configurato per essere ospitato su Streamlit Cloud. Ricordati di aggiungere FOOTBALL_API_KEY nei "Secrets" della tua app su Streamlit Cloud.
 
-## Deployment — Streamlit Community Cloud
+Aggiornamento Automatico (GitHub Actions)
+Il file aggiornamento.yml gestisce l'aggiornamento automatico del database ogni mattina alle 04:00 (CET).
 
-The dashboard can be deployed publicly (accessible from browser and mobile) via [Streamlit Community Cloud](https://share.streamlit.io) at no cost:
+Esegue lo scraper asincrono.
 
-1. Push the project to a GitHub repository (private is fine)
-2. Make sure `calcio.db` is included in the repository
-3. Connect the repo on share.streamlit.io and select `dashboard.py` as the entry point
-4. The app will be live at a public URL within minutes
+Calibra i nuovi parametri Alpha.
 
-No code changes are required for deployment.
+Effettua il commit del file calcio.db aggiornato direttamente nel repository.
 
----
+## 📂 Struttura File
 
-## Why This Project Is Powerful
+- dashboard.py: Entry point dell'applicazione.
 
-Even though the interface looks simple, the stack demonstrates:
+- scrapplusdb.py: Inizializzazione DB e fetching dati.
 
-- **ETL pipeline** — Extract from JSON, Transform with business logic, Load into SQLite
-- **Object-Oriented Programming** — `CalcioDatabase` and `StatsQuery` classes
-- **SQL indexing and query optimization** — CTEs, aggregations, window functions
-- **Frontend without a full web framework** — sortable HTML tables with embedded CSS and vanilla JavaScript rendered inside iframes to bypass Streamlit's script sanitization
-- **Responsive design** — server-side mobile detection via query params, conditional layout and column visibility
-- **Streamlit caching** — `@st.cache_resource` for the DB connection, `@st.cache_data` for query results (5-minute TTL)
-- **Scalable architecture** — adding new leagues or stats requires only a new query function, the UI adapts automatically
+- stats_engine.py: Algoritmi statistici e calibrazione.
 
----
+- ui_components.py: Componenti HTML/JS per le tabelle.
 
-## Final Summary
+- query.py: Repository delle query SQL centralizzato.
 
-This project is a complete mini data platform:
+- .github/workflows/aggiornamento.yml: Configurazione CI/CD per update dati.
 
-1. Reads and cleans raw match data from JSON
-2. Stores it in a structured, indexed SQLite database
-3. Exposes it through a dark-mode interactive dashboard
-4. Works locally and is deployable to the web with zero code changes
-5. Adapts its layout automatically for mobile screens
+## 📝 Licenza
+
+Questo progetto è distribuito sotto licenza MIT.
+
+Developed by Roosco
+Dati forniti da Football-Data.org

@@ -136,4 +136,4 @@ with st.spinner("Calcolo in corso..."):
 st.divider()
 
 # --- SEZIONE FOOTER ---
-st.markdown('<div class="footer">Made with ❤️ by Roosco | Data from Football-Data.org | Powered by Streamlit</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">Made with ❤️ by Roosco | Data from Football-Data.org</div>', unsafe_allow_html=True)
