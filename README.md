@@ -47,7 +47,7 @@ Una API Key (gratuita) da Football-Data.org
 
 Clona il repository
 ```console
-git clone https://github.com/tuo-username/xg-football-analytics.git
+git clone https://github.com/crocianigiacomo/stats_partite_db.git
 cd xg-football-analytics
 ```
 Installa le dipendenze
@@ -130,5 +130,5 @@ Effettua il commit del file calcio.db aggiornato direttamente nel repository.
 
 Questo progetto è distribuito sotto licenza MIT.
 
-Developed by Roosco
+Developed by Giacomo
 Dati forniti da Football-Data.org
