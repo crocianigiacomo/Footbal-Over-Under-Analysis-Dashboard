@@ -70,7 +70,7 @@ python scrapplusdb.py
 
 Avvia la dashboard:
 ```console
-streamlit run dashboard.py
+python -m streamlit run dashboard.py
 ```
 
 ## 🚀 Deployment & Automazione
