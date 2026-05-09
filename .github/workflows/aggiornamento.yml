@@ -37,4 +37,5 @@ jobs:
           git add calcio.db
           # Fai il commit solo se calcio.db è cambiato davvero
           git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati" || echo "Nessuna modifica da salvare"
+          git pull --rebase origin main
           git push
