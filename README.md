@@ -45,14 +45,15 @@ Una API Key (gratuita) da Football-Data.org
 
 - 2. Setup
 
-Bash
+```python
 Clona il repository
 git clone https://github.com/tuo-username/xg-football-analytics.git
 cd xg-football-analytics
-
+```
+```python
 Installa le dipendenze
 pip install -r requirements.txt
-
+```
 - 3. Configurazione
      Crea un file .env nella cartella principale:
 
