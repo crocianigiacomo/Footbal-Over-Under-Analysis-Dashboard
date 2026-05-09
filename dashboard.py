@@ -61,6 +61,11 @@ if not df_next.empty:
     df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
     g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
     st.html(ui_components.build_calendario(df_next[df_next['giornata'] == g_prox]))
+else:
+    st.html(ui_components.build_empty_state(
+        "📅", "Nessuna partita in programma",
+        f"Il calendario per {lega_cal} non contiene partite future."
+    ))
 
 st.divider()
 

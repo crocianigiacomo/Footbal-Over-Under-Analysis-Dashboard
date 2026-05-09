@@ -134,6 +134,17 @@ def build_gol_table(df):
     </div>
     """
 
+def build_empty_state(icon: str, title: str, subtitle: str) -> str:
+    return (
+        f"<div style='display:flex;flex-direction:column;align-items:center;justify-content:center;"
+        f"padding:3rem 2rem;border-radius:12px;background:#181818;border:1px dashed #2f3136;"
+        f"text-align:center;gap:0.75rem;'>"
+        f"<div style='font-size:2.5rem;opacity:0.5'>{icon}</div>"
+        f"<div style='color:#ffffff;font-weight:700;font-size:1rem'>{title}</div>"
+        f"<div style='color:#8e9297;font-size:0.85rem;max-width:320px;line-height:1.5'>{subtitle}</div>"
+        f"</div>"
+    )
+
 def build_bottom_nav():
     return """
     <div class="bottom-nav">

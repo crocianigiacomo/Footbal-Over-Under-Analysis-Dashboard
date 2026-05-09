@@ -23,7 +23,7 @@ html {
 /* Spazio extra sopra e sotto per non coprire i contenuti con la barra nav o il bordo */
 .block-container {
   padding-top: 1rem !important;
-  padding-bottom: 160px !important;
+  padding-bottom: 2rem !important;
 }
 
 /* ── TITOLI PRINCIPALI ── */
@@ -197,7 +197,7 @@ html {
   gap: 6px;
 }
 .pct-track {
-  width: 60px;
+  width: clamp(36px, 10vw, 80px);
   background: #282828;
   height: 6px;
   border-radius: 3px;
@@ -228,12 +228,76 @@ html {
   }
   .cal-table td,
   .cal-table th {
-    font-size: 12px !important;
+    font-size: 13px !important;
     padding: 8px 6px !important;
   }
   .sep-row td {
     font-size: 0.65rem !important;
   }
+  .block-container {
+    padding-bottom: 120px !important;
+  }
+}
+
+/* ── WIDGET STYLING ── */
+div[data-baseweb="select"] > div {
+  background: #1e1e1e !important;
+  border-color: #2f3136 !important;
+  border-radius: 8px !important;
+  transition: border-color 0.2s;
+}
+div[data-baseweb="select"] > div:hover {
+  border-color: #5865f2 !important;
+}
+div[data-baseweb="select"] input,
+div[data-baseweb="select"] [role="combobox"] {
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+[data-baseweb="menu"] {
+  background: #1e1e1e !important;
+  border: 1px solid #2f3136 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+[data-baseweb="option"] {
+  background: #1e1e1e !important;
+  color: #dcddde !important;
+  cursor: pointer !important;
+}
+[data-baseweb="option"]:hover {
+  background: #2f3136 !important;
+}
+
+[data-testid="stSegmentedControl"] > div {
+  background: #1e1e1e !important;
+  border: 1px solid #2f3136 !important;
+  border-radius: 8px !important;
+  padding: 3px !important;
+  gap: 3px !important;
+}
+[data-testid="stSegmentedControl"] button {
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  color: #8e9297 !important;
+  border: none !important;
+  transition:
+    background 0.2s,
+    color 0.2s !important;
+}
+[data-testid="stSegmentedControl"] button[aria-selected="true"] {
+  background: #5865f2 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(88, 101, 242, 0.4) !important;
+}
+
+[data-testid="stWidgetLabel"] p {
+  color: #b3b3b3 !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
 }
 
 footer,
