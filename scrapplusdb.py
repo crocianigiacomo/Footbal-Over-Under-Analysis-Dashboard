@@ -7,6 +7,7 @@ load_dotenv()
 
 LEAGUE_FLAGS = {
     'SA':  'Serie A',
+    'PL': 'Premier League',
     'PD':  'La Liga',
     'BL1': 'Bundesliga',
     'FL1': 'Ligue 1',
