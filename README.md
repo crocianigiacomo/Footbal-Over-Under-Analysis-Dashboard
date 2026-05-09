@@ -6,15 +6,15 @@ XG Football Analytics è una piattaforma di analisi predittiva progettata per an
 
 ## 🌟 Caratteristiche Principali
 
-🔮 Previsioni Evolute: Calcolo delle probabilità per Over/Under 2.5 e 3.5 basato su dati storici e performance recenti.
+- 🔮 Previsioni Evolute: Calcolo delle probabilità per Over/Under 2.5 e 3.5 basato su dati storici e performance recenti.
 
-📉 Calibrazione Alpha Automatica: Il modello calibra dinamicamente il parametro Alpha per ogni lega, pesando maggiormente la forma recente delle squadre tramite un'analisi della Log-Loss.
+- 📉 Calibrazione Alpha Automatica: Il modello calibra dinamicamente il parametro Alpha per ogni lega, pesando maggiormente la forma recente delle squadre tramite un'analisi della Log-Loss.
 
-📅 Calendario Real-time: Visualizzazione automatica del prossimo turno di campionato con orari e accoppiamenti.
+- 📅 Calendario Real-time: Visualizzazione automatica del prossimo turno di campionato con orari e accoppiamenti.
 
-📊 Analisi Granulare: Statistiche dettagliate su gol fatti e subiti (casa/trasferta) con tabelle interattive e ordinabili.
+- 📊 Analisi Granulare: Statistiche dettagliate su gol fatti e subiti (casa/trasferta) con tabelle interattive e ordinabili.
 
-🤖 Automazione Totale: Aggiornamento quotidiano del database tramite GitHub Actions.
+- 🤖 Automazione Totale: Aggiornamento quotidiano del database tramite GitHub Actions.
 
 ## 🏗️ Architettura Tecnica
 
@@ -38,29 +38,29 @@ Il cuore del sistema utilizza la Distribuzione di Poisson pesata nel tempo:
 
 ## 🛠️ Installazione Locale
 
-- 1. Prerequisiti
+1. Prerequisiti
 
 Python 3.11+
 Una API Key (gratuita) da Football-Data.org
 
-- 2. Setup
+2. Setup
 
-```console
 Clona il repository
+```console
 git clone https://github.com/tuo-username/xg-football-analytics.git
 cd xg-football-analytics
 ```
-```console
 Installa le dipendenze
+```console
 pip install -r requirements.txt
 ```
-- 3. Configurazione
+3. Configurazione
      Crea un file .env nella cartella principale:
 
 Code snippet
 FOOTBALL_API_KEY=il_tuo_token_qui
 
-- 4. Primo avvio
+4. Primo avvio
 
 Esegui lo scraper per popolare il database e calibrare i parametri:
 
