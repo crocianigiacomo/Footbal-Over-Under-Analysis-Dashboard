@@ -3,7 +3,11 @@ name: Aggiornamento DB Calcio
 on:
   schedule:
     - cron: "0 3 * * *"
+<<<<<<< HEAD
   workflow_dispatch:
+=======
+  workflow_dispatch: 
+>>>>>>> 1e43018ffdef3d2c2b32275cfb6bcd47d8fda02d
 
 jobs:
   update-db:
@@ -14,7 +18,12 @@ jobs:
       - name: Checkout del codice
         uses: actions/checkout@v4
         with:
+<<<<<<< HEAD
           fetch-depth: 0
+=======
+          # Importante: scarica tutta la cronologia per evitare conflitti di rebase
+          fetch-depth: 0 
+>>>>>>> 1e43018ffdef3d2c2b32275cfb6bcd47d8fda02d
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -35,6 +44,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+<<<<<<< HEAD
 
           # 1. Pulizia drastica: rimuove tutto ciò che non è nel repository 
           # eccetto le modifiche al database appena fatte.
@@ -58,4 +68,28 @@ jobs:
           git pull --rebase origin main
 
           # 6. Invio dei dati
+=======
+          
+          # 1. Rimuoviamo i file temporanei di SQLite e la cache di Python per pulire Git
+          rm -f calcio.db-wal calcio.db-shm
+          find . -type d -name "__pycache__" -exec rm -rf {} +
+          
+          # 2. Proviamo ad aggiungere solo il database
+          git add calcio.db
+          
+          # 3. Verifichiamo se ci sono cambiamenti effettivi
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica rilevata nel database. Esco."
+            exit 0
+          fi
+          
+          # 4. Facciamo il commit
+          git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati"
+          
+          # 5. Strategia di Pull sicura: se qualcuno ha pushato modifiche al codice (es. dashboard.py), 
+          # le integriamo prima di caricare il nuovo DB
+          git pull --rebase origin main
+          
+          # 6. Invio finale
+>>>>>>> 1e43018ffdef3d2c2b32275cfb6bcd47d8fda02d
           git push
