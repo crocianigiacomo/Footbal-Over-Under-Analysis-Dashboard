@@ -9,11 +9,6 @@ on:
 jobs:
   update-db:
     runs-on: ubuntu-latest
-    env:
-      # Risolve il warning sulla deprecazione di Node.js 20
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      
 
     steps:
       - name: Checkout del codice
