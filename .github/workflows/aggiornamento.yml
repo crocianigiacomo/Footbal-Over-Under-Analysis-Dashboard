@@ -2,9 +2,8 @@ name: Aggiornamento DB Calcio
 
 on:
   schedule:
-    # Esegue lo script ogni giorno alle 04:00 del mattino (orario italiano / 03:00 UTC)
     - cron: "0 3 * * *"
-  workflow_dispatch: # Questo ti permette di avere un tasto "Run" per avviarlo a mano se serve
+  workflow_dispatch:
 
 jobs:
   update-db:
@@ -14,11 +13,13 @@ jobs:
     steps:
       - name: Checkout del codice
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11" # Assicurati che sia compatibile con il tuo codice
+          python-version: "3.11"
 
       - name: Installa dipendenze
         run: |
@@ -34,8 +35,27 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # 1. Pulizia drastica: rimuove tutto ciò che non è nel repository 
+          # eccetto le modifiche al database appena fatte.
+          # Rimuove file -wal, -shm, cache e file json di test.
+          git clean -fd
+          rm -f calcio.db-wal calcio.db-shm test_api_diretta.json test_serie_a.json
+
+          # 2. Aggiunge il database
           git add calcio.db
-          # Fai il commit solo se calcio.db è cambiato davvero
-          git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati" || echo "Nessuna modifica da salvare"
+
+          # 3. Se non ci sono modifiche, termina con successo senza errore
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica al database. Fine."
+            exit 0
+          fi
+
+          # 4. Commit delle modifiche
+          git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati"
+
+          # 5. Pull con rebase per evitare conflitti se hai modificato il codice da web
           git pull --rebase origin main
+
+          # 6. Invio dei dati
           git push
