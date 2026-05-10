@@ -4,7 +4,7 @@ on:
   schedule:
     # Esegue lo script ogni giorno alle 04:00 del mattino (orario italiano / 03:00 UTC)
     - cron: "0 3 * * *"
-  workflow_dispatch: # Questo ti permette di avere un tasto "Run" per avviarlo a mano se serve
+  workflow_dispatch: 
 
 jobs:
   update-db:
@@ -14,11 +14,14 @@ jobs:
     steps:
       - name: Checkout del codice
         uses: actions/checkout@v4
+        with:
+          # Importante: scarica tutta la cronologia per evitare conflitti di rebase
+          fetch-depth: 0 
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11" # Assicurati che sia compatibile con il tuo codice
+          python-version: "3.11"
 
       - name: Installa dipendenze
         run: |
@@ -34,8 +37,26 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # 1. Rimuoviamo i file temporanei di SQLite e la cache di Python per pulire Git
+          rm -f calcio.db-wal calcio.db-shm
+          find . -type d -name "__pycache__" -exec rm -rf {} +
+          
+          # 2. Proviamo ad aggiungere solo il database
           git add calcio.db
-          # Fai il commit solo se calcio.db è cambiato davvero
-          git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati" || echo "Nessuna modifica da salvare"
+          
+          # 3. Verifichiamo se ci sono cambiamenti effettivi
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica rilevata nel database. Esco."
+            exit 0
+          fi
+          
+          # 4. Facciamo il commit
+          git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati"
+          
+          # 5. Strategia di Pull sicura: se qualcuno ha pushato modifiche al codice (es. dashboard.py), 
+          # le integriamo prima di caricare il nuovo DB
           git pull --rebase origin main
+          
+          # 6. Invio finale
           git push
