@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+*.db-wal
+*.db-shm
+__pycache__/
+test_*.json

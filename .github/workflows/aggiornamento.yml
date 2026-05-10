@@ -2,94 +2,61 @@ name: Aggiornamento DB Calcio
 
 on:
   schedule:
+    # Esegue lo script ogni giorno alle 04:00 italiane (03:00 UTC)
     - cron: "0 3 * * *"
-<<<<<<< HEAD
-  workflow_dispatch:
-=======
-  workflow_dispatch: 
->>>>>>> 1e43018ffdef3d2c2b32275cfb6bcd47d8fda02d
+  workflow_dispatch: # Permette l'avvio manuale dal pannello Actions
 
 jobs:
   update-db:
     runs-on: ubuntu-latest
     env:
+      # Risolve il warning sulla deprecazione di Node.js 20
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout del codice
         uses: actions/checkout@v4
         with:
-<<<<<<< HEAD
+          # Scarica l'intera cronologia per gestire meglio i rebase
           fetch-depth: 0
-=======
-          # Importante: scarica tutta la cronologia per evitare conflitti di rebase
-          fetch-depth: 0 
->>>>>>> 1e43018ffdef3d2c2b32275cfb6bcd47d8fda02d
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.11" #
 
       - name: Installa dipendenze
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt #
 
       - name: Esegui lo Scraper
         env:
+          # Recupera la chiave dai Secrets impostati su GitHub
           FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
-        run: python scrapplusdb.py
+        run: python scrapplusdb.py #
 
       - name: Commit e Push del DB
         run: |
+          # Configurazione utente Bot
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-<<<<<<< HEAD
 
-          # 1. Pulizia drastica: rimuove tutto ciò che non è nel repository 
-          # eccetto le modifiche al database appena fatte.
-          # Rimuove file -wal, -shm, cache e file json di test.
-          git clean -fd
-          rm -f calcio.db-wal calcio.db-shm test_api_diretta.json test_serie_a.json
-
-          # 2. Aggiunge il database
-          git add calcio.db
-
-          # 3. Se non ci sono modifiche, termina con successo senza errore
-          if git diff --staged --quiet; then
-            echo "Nessuna modifica al database. Fine."
-            exit 0
-          fi
-
-          # 4. Commit delle modifiche
-          git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati"
-
-          # 5. Pull con rebase per evitare conflitti se hai modificato il codice da web
-          git pull --rebase origin main
-
-          # 6. Invio dei dati
-=======
-          
-          # 1. Rimuoviamo i file temporanei di SQLite e la cache di Python per pulire Git
+          # 1. Rimuove file temporanei SQLite e cache per evitare errori di Git
           rm -f calcio.db-wal calcio.db-shm
           find . -type d -name "__pycache__" -exec rm -rf {} +
-          
-          # 2. Proviamo ad aggiungere solo il database
+
+          # 2. Aggiunge solo il file del database
           git add calcio.db
-          
-          # 3. Verifichiamo se ci sono cambiamenti effettivi
+
+          # 3. Verifica se ci sono state nuove partite aggiunte
           if git diff --staged --quiet; then
-            echo "Nessuna modifica rilevata nel database. Esco."
+            echo "Nessun nuovo dato rilevato. Termino il workflow."
             exit 0
           fi
-          
-          # 4. Facciamo il commit
+
+          # 4. Crea il commit
           git commit -m "🤖 Auto-update: Aggiornato calcio.db con i nuovi risultati"
-          
-          # 5. Strategia di Pull sicura: se qualcuno ha pushato modifiche al codice (es. dashboard.py), 
-          # le integriamo prima di caricare il nuovo DB
-          git pull --rebase origin main
-          
-          # 6. Invio finale
->>>>>>> 1e43018ffdef3d2c2b32275cfb6bcd47d8fda02d
-          git push
+
+          # 5. Prova il push. Se fallisce (es. modifiche al codice da web), fa il pull e riprova
+          git push || (git pull --rebase origin main && git push)
