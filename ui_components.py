@@ -148,9 +148,9 @@ def build_empty_state(icon: str, title: str, subtitle: str) -> str:
 def build_bottom_nav():
     return """
     <div class="bottom-nav">
-        <a href="#statistiche" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Rank</span></a>
-        <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>
-        <a href="#calendario" class="nav-item"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
         <a href="#previsioni" class="nav-item"><span class="nav-icon">🔮</span><span class="nav-label">Predict</span></a>
+        <a href="#calendario" class="nav-item"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
+        <a href="#statistiche" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Rank</span></a>
+        <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>        
     </div>
     """

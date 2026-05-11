@@ -32,47 +32,6 @@ st.markdown(ui_components.build_bottom_nav(), unsafe_allow_html=True)
 
 leghe_disp = query_leghe()
 
-# --- SEZIONE STATISTICHE ---
-st.markdown('<div id="statistiche" class="section-title">📊 Ranking </div>', unsafe_allow_html=True)
-soglia_stats = _soglia_widget("Soglia Gol:", "stats_soglia")
-c1, c2 = st.columns(2)
-with c1:
-    with st.spinner(""):
-        df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.html(ui_components.build_stats_table(df_ov, "over", soglia_stats))
-with c2:
-    with st.spinner(""):
-        df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.html(ui_components.build_stats_table(df_un, "under", soglia_stats))
-
-st.divider()
-
-# --- SEZIONE RETI ---
-st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti </div>', unsafe_allow_html=True)
-lega_sel = st.selectbox("Seleziona Lega:", options=leghe_disp, key="gol_lega")
-with st.spinner(""):
-    df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
-st.html(ui_components.build_gol_table(df_gol))
-
-st.divider()
-
-# --- SEZIONE CALENDARIO ---
-st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
-lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
-with st.spinner(""):
-    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
-if not df_next.empty:
-    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
-    g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
-    st.html(ui_components.build_calendario(df_next[df_next['giornata'] == g_prox]))
-else:
-    st.html(ui_components.build_empty_state(
-        "📅", "Nessuna partita in programma",
-        f"Il calendario per {lega_cal} non contiene partite future."
-    ))
-
-st.divider()
-
 # --- SEZIONE PREVISIONI ---
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni </div>', unsafe_allow_html=True)
 
@@ -132,6 +91,47 @@ with st.spinner("Calcolo in corso..."):
             "🔮", "Previsioni non disponibili",
             f"Dati storici insufficienti per {lega_pred}."
         ))
+
+st.divider()
+
+# --- SEZIONE CALENDARIO ---
+st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
+lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
+with st.spinner(""):
+    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
+if not df_next.empty:
+    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
+    g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
+    st.html(ui_components.build_calendario(df_next[df_next['giornata'] == g_prox]))
+else:
+    st.html(ui_components.build_empty_state(
+        "📅", "Nessuna partita in programma",
+        f"Il calendario per {lega_cal} non contiene partite future."
+    ))
+
+st.divider()
+
+# --- SEZIONE STATISTICHE ---
+st.markdown('<div id="statistiche" class="section-title">📊 Ranking </div>', unsafe_allow_html=True)
+soglia_stats = _soglia_widget("Soglia Gol:", "stats_soglia")
+c1, c2 = st.columns(2)
+with c1:
+    with st.spinner(""):
+        df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
+    st.html(ui_components.build_stats_table(df_ov, "over", soglia_stats))
+with c2:
+    with st.spinner(""):
+        df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
+    st.html(ui_components.build_stats_table(df_un, "under", soglia_stats))
+
+st.divider()
+
+# --- SEZIONE RETI ---
+st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti </div>', unsafe_allow_html=True)
+lega_sel = st.selectbox("Seleziona Lega:", options=leghe_disp, key="gol_lega")
+with st.spinner(""):
+    df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
+st.html(ui_components.build_gol_table(df_gol))
 
 st.divider()
 
