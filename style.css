@@ -51,22 +51,6 @@ html { scroll-behavior: smooth; }
 /* Widget Custom */
 [data-testid="stSegmentedControl"] > div { background: #1e1e1e !important; border-radius: 8px !important; }
 
-/* 3. Centra i pulsanti del Segmented Control (Soglia) */
-[data-testid="stSegmentedControl"] {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    margin-left: 100px !important;
-}
-
-/* 4. Centra il Toggle (Forma Recente) */
-[data-testid="stCheckbox"] {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    margin-left: 100px !important;
-}
-
 /* Barra Percentuale Custom */
 .pct-wrap {
   display: flex;
