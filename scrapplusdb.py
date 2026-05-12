@@ -193,6 +193,7 @@ async def main():
         
     if all_calendario:
         final_cal = pd.concat(all_calendario, ignore_index=True)
+        connection.execute("DELETE FROM calendario")
         save_to_sqlite(final_cal, connection, 'calendario')
 
     connection.close()

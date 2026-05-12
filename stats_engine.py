@@ -57,10 +57,9 @@ def calculate_predictions(df_raw, df_next, soglia, alpha):
     strengths, avg_h, avg_a = compute_weighted_strengths(df_raw, alpha)
     rho = estimate_rho(df_raw, strengths, avg_h, avg_a, alpha)
     
-    df_next = df_next.copy()
-    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
-    prox = df_next.sort_values('data_ora').iloc[0]['giornata']
-    matches = df_next[df_next['giornata'] == prox]
+    # Il motore ora calcola le previsioni per TUTTE le righe che riceve
+    matches = df_next.copy()
+
 
     preds = []
     for _, m in matches.iterrows():

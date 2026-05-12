@@ -69,16 +69,34 @@ with st.spinner("Calcolo in corso..."):
     # Se il toggle è attivo usiamo l'alpha calibrato, altrimenti 0.0 (tutte le partite pesano uguale)
     alpha_finale = alpha_db if forma else 0.0
 
-    # 2. Recupero dati per il calcolo
+        # 2. Recupero dati per il calcolo
     df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": lega_pred}, ttl=3600)
-    df_cal = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_pred}, ttl=3600)
+    # [span_2](start_span)Cambiato nome query[span_2](end_span)
+    df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_pred}, ttl=3600)
     
-    # 3. Esecuzione del motore statistico
-    preds_df = stats_engine.calculate_predictions(df_raw, df_cal, soglia_pred, alpha_finale)
+     # 3. Divisione Dati e Calcolo Previsioni
+    df_cal_rec = df_cal[df_cal['is_recupero'] == 1]
+    df_cal_std = df_cal[df_cal['is_recupero'] == 0]
+
+    # --- SOTTO-SEZIONE RECUPERI ---
+    if not df_cal_rec.empty:
+        preds_rec = stats_engine.calculate_predictions(df_raw, df_cal_rec, soglia_pred, alpha_finale)
+        if not preds_rec.empty:
+            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔮 PREVISIONI RECUPERI</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_prediction_table(preds_rec))
+            st.divider()
+
+    # --- SOTTO-SEZIONE TURNO STANDARD ---
+    if not df_cal_std.empty:
+        preds_std = stats_engine.calculate_predictions(df_raw, df_cal_std, soglia_pred, alpha_finale)
+        if not preds_std.empty:
+            g_num = df_cal_std['giornata'].iloc[0]
+            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">🔮 PREVISIONI TURNO PRINCIPALE</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_prediction_table(preds_std))
     
-    # 4. Visualizzazione Risultati
-    if not preds_df.empty:
-        st.html(ui_components.build_prediction_table(preds_df))
+    if df_cal_rec.empty and df_cal_std.empty:
+        st.warning("Dati insufficienti per generare le previsioni per questa lega.")
+
         # Mostriamo all'utente quale valore di Alpha sta usando il modello per trasparenza
         st.markdown(
             f"<div style='text-align:right; font-size:0.8rem; color:#8e9297;'>"
@@ -86,23 +104,45 @@ with st.spinner("Calcolo in corso..."):
             f"</div>", 
             unsafe_allow_html=True
         )
-    else:
-        st.html(ui_components.build_empty_state(
-            "🔮", "Previsioni non disponibili",
-            f"Dati storici insufficienti per {lega_pred}."
-        ))
 
 st.divider()
 
 # --- SEZIONE CALENDARIO ---
-st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
+st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario e Recuperi</div>', unsafe_allow_html=True)
 lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
-with st.spinner(""):
-    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
-if not df_next.empty:
-    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
-    g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
-    st.html(ui_components.build_calendario(df_next[df_next['giornata'] == g_prox]))
+
+# Eseguiamo la nuova query dettagliata
+df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_cal}, ttl=3600)
+
+if not df_cal.empty:
+    df_cal['data_ora'] = pd.to_datetime(df_cal['data_ora'], utc=True)
+    now = pd.Timestamp.now(tz='UTC')
+    
+    # Filtriamo solo i match futuri
+    df_display = df_cal[df_cal['data_ora'] >= now]
+    
+    if not df_display.empty:
+        # 1. Visualizzazione RECUPERI (se presenti)
+        df_rec = df_display[df_display['is_recupero'] == 1]
+        if not df_rec.empty:
+            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 PARTITE DI RECUPERO</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_calendario(df_rec))
+            st.divider()
+        
+                # 2. Visualizzazione TURNO PRINCIPALE
+        df_std = df_display[df_display['is_recupero'] == 0]
+        if not df_std.empty:
+            g_num = df_std['giornata'].iloc[0]
+            
+            # FILTRO AGGIUNTO: teniamo solo le partite di QUESTA singola giornata
+            df_std_current = df_std[df_std['giornata'] == g_num]
+            
+            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_calendario(df_std_current))
+
+    else:
+        st.info("Nessun match in programma.")
+
 else:
     st.html(ui_components.build_empty_state(
         "📅", "Nessuna partita in programma",
