@@ -104,11 +104,6 @@ with st.spinner("Calcolo in corso..."):
             f"</div>", 
             unsafe_allow_html=True
         )
-    else:
-        st.html(ui_components.build_empty_state(
-            "🔮", "Previsioni non disponibili",
-            f"Dati storici insufficienti per {lega_pred}."
-        ))
 
 st.divider()
 
