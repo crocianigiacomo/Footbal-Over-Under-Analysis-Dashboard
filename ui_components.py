@@ -32,7 +32,7 @@ def build_stats_table(df, tipo, soglia):
             f"<td>{pct_bar_html(pct, color)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5'>top {tipo}</td></tr><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5' style='text-align:center; text-transform:uppercase;'>top {tipo}</td></tr><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_calendario(df):
     rows = ""
@@ -72,8 +72,8 @@ def build_prediction_table(df):
             f"<td class='num hide-mob'>{r['Gol Attesi Casa']}</td>"
             f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</td>"
             f"<td class='num hide-mob'><b>{r['Gol Attesi Totali']}</b></td>"
-            f"<td><span style='color:{c};font-weight:bold; text-align:center'>{r['Esito']}</span></td>"
-            f"<td style='text-align:center'>{pct_bar_html(r['Prob %'], c)}</td>"
+            f"<td><span style='color:{c};font-weight:bold; text-align:center;'>{r['Esito']}</span></td>"
+            f"<td style='text-align:center;'>{pct_bar_html(r['Prob %'], c)}</td>"
             f"</tr>"
         )
     return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Match</th><th class='num hide-mob'>xG C</th><th class='num hide-mob'>xG T</th><th class='num hide-mob'>Tot</th><th style='text-align:center'>Consiglio</th><th style='text-align:center'>Affidabilità</th></tr></thead><tbody>{rows}</tbody></table></div>"
@@ -164,6 +164,38 @@ def build_bottom_nav():
         <a href="#previsioni" class="nav-item"><span class="nav-icon">🔮</span><span class="nav-label">Predict</span></a>
         <a href="#calendario" class="nav-item"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
         <a href="#statistiche" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Rank</span></a>
-        <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>        
+        <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>
+        <a href="#schedina" class="nav-item"><span class="nav-icon">🎟️</span><span class="nav-label">Schedina</span></a>        
+    </div>
+    """
+
+def build_betting_slip(df_top):
+    items_html = ""
+    for _, r in df_top.iterrows():
+        items_html += f"""
+        <div class="slip-item">
+            <div class="slip-match">{r['Partita']}</div>
+            <div class="slip-prediction">
+                <span style="font-weight: bold;">{r['Esito']}</span>
+                <span style="font-weight: bold;">{r['Prob %']}%</span>
+            </div>
+            <div style="font-size: 0.7rem; color: #666; margin-top: 2px;">{r['Lega']}</div>
+        </div>
+        """
+    
+    return f"""
+    <div class="betting-slip-container">
+        <div class="betting-slip">
+            <div class="slip-header">
+                <div class="slip-title">XG ANALYTICS</div>
+                <div style="font-size:0.75rem; margin-top: 5px;">RICEVUTA TOP 10 SETTIMANALE</div>
+            </div>
+            {items_html}
+            <div class="slip-footer">
+                <div>TOTALE EVENTI: 10</div>
+                <div class="slip-barcode">||||||||||||||||||||||||||||</div>
+                <div style="margin-top:5px; font-weight:bold;">GIOCA RESPONSABILMENTE</div>
+            </div>
+        </div>
     </div>
     """

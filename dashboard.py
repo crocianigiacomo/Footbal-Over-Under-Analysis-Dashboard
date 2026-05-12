@@ -4,6 +4,39 @@ import query
 import stats_engine
 import ui_components
 
+# --- FUNZIONE AGGREGATRICE IN CACHE ---
+@st.cache_data(ttl=3600, show_spinner=False)
+def genera_schedina_globale(leghe_disponibili):
+    import sqlite3 # Usiamo la libreria nativa per bypassare il pool di SQLAlchemy
+    tutte_predizioni = []
+    
+    # Apriamo UNA singola connessione diretta e velocissima
+    with sqlite3.connect('calcio.db') as db:
+        for lega in leghe_disponibili:
+            # pd.read_sql lavora perfettamente in nativo con sqlite3
+            df_p = pd.read_sql("SELECT alpha FROM parametri_leghe WHERE lega = :lega", db, params={"lega": lega})
+            alpha_l = df_p['alpha'].iloc[0] if not df_p.empty else 0.12
+            
+            df_raw_l = pd.read_sql(query.MATCH_DATA_SQL, db, params={"lega": lega})
+            df_cal_l = pd.read_sql(query.CALENDARIO_DETTAGLIATO_SQL, db, params={"lega": lega})
+            
+            if not df_cal_l.empty:
+                df_fut_l = df_cal_l[(pd.to_datetime(df_cal_l['data_ora'], utc=True) >= pd.Timestamp.now(tz='UTC')) & (df_cal_l['is_recupero'] == 0)]
+                
+                # Calcoliamo per entrambe le soglie
+                for s in [2.5, 3.5]:
+                    p_res = stats_engine.calculate_predictions(df_raw_l, df_fut_l, s, alpha_l)
+                    if not p_res.empty:
+                        p_res['Lega'] = lega
+                        tutte_predizioni.append(p_res)
+                        
+    if not tutte_predizioni:
+        return pd.DataFrame()
+
+    df_total = pd.concat(tutte_predizioni, ignore_index=True)
+    # Ordina per affidabilità e prende i top 10 globali
+    return df_total.sort_values(by="Prob %", ascending=False).head(10)
+
 # 1. CONFIGURAZIONE
 st.set_page_config(page_title="XG Football Analytics", layout="wide", initial_sidebar_state="collapsed")
 
@@ -120,6 +153,18 @@ st.divider()
 st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti </div>', unsafe_allow_html=True)
 df_g = conn.query(query.GOL_LEGA_SQL, params={"lega": global_lega}, ttl=3600)
 st.html(ui_components.build_gol_table(df_g))
-
 st.divider()
+
+# --- SEZIONE 5: SCHEDINA DELLA SETTIMANA ---
+st.markdown('<div id="schedina" class="section-title-red">🎟️ Schedina della Settimana </div>', unsafe_allow_html=True)
+with st.spinner("Calcolo schedina in corso..."):
+    df_top_10 = genera_schedina_globale(leghe_disp) 
+    
+    if not df_top_10.empty:
+        st.html(ui_components.build_betting_slip(df_top_10))
+    else:
+        st.warning("Dati insufficienti per generare la schedina.")
+st.divider()
+
+# --- FOOTER ---
 st.markdown('<div class="footer">Made with ❤️ by Roosco | Data from Football-Data.org</div>', unsafe_allow_html=True)
