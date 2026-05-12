@@ -72,8 +72,8 @@ def build_prediction_table(df):
             f"<td class='num hide-mob'>{r['Gol Attesi Casa']}</td>"
             f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</td>"
             f"<td class='num hide-mob'><b>{r['Gol Attesi Totali']}</b></td>"
-            f"<td><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
-            f"<td>{pct_bar_html(r['Prob %'], c)}</td>"
+            f"<td><span style='color:{c};font-weight:bold; text-align:center'>{r['Esito']}</span></td>"
+            f"<td style='text-align:center'>{pct_bar_html(r['Prob %'], c)}</td>"
             f"</tr>"
         )
     return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Match</th><th class='num hide-mob'>xG C</th><th class='num hide-mob'>xG T</th><th class='num hide-mob'>Tot</th><th style='text-align:center'>Consiglio</th><th style='text-align:center'>Affidabilità</th></tr></thead><tbody>{rows}</tbody></table></div>"
