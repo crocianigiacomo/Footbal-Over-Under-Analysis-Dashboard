@@ -131,7 +131,7 @@ if not df_cal.empty:
             # FILTRO AGGIUNTO: teniamo solo le partite di QUESTA singola giornata
             df_std_current = df_std[df_std['giornata'] == g_num]
             
-            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO (Giornata {g_num})</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO</div>', unsafe_allow_html=True)
             st.html(ui_components.build_calendario(df_std_current))
 
     else:
