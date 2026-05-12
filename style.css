@@ -55,6 +55,7 @@ html { scroll-behavior: smooth; }
 .pct-wrap {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
 }
 .pct-track {
