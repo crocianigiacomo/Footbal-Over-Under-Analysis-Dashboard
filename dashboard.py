@@ -127,6 +127,7 @@ if not df_cal.empty:
         df_std = df_display[df_display['is_recupero'] == 0]
         if not df_std.empty:
             g_num = df_std['giornata'].iloc[0]
+df_std_current = df_std[df_std['giornata'] == g_num]
             st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO</div>', unsafe_allow_html=True)
             st.html(ui_components.build_calendario(df_std))
     else:
