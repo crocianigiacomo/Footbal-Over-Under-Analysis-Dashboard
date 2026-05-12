@@ -1,192 +1,72 @@
 /* ── PULIZIA TOTALE ── */
+header[data-testid="stHeader"], [data-testid="stDecoration"] { display: none !important; }
+footer [data-testid="stFooter"] { display: none !important; }
 
-/* Nasconde l'header e la decorazione superiore */
-header[data-testid="stHeader"],
-[data-testid="stDecoration"] {
-  display: none !important;
-}
+html { scroll-behavior: smooth; }
+[data-testid="stVerticalBlock"] > div { gap: 1rem !important; }
 
-/* Nasconde il footer standard */
-footer [data-testid="stFooter"] {
-  display: none !important;
-}
-
-/* ── RESET E SCROLL SMOOTH ── */
-html {
-  scroll-behavior: smooth;
-}
-
-[data-testid="stVerticalBlock"] > div {
-  gap: 1rem !important;
-}
-
-/* Spazio extra sopra e sotto per non coprire i contenuti con la barra nav o il bordo */
 .block-container {
   padding-top: 1rem !important;
-  padding-bottom: 2rem !important;
+  padding-bottom: 120px !important; 
 }
 
-/* ── TITOLI PRINCIPALI ── */
-.main-title {
-  font-size: 3rem;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.5px;
-  margin-top: 1rem;
-  margin-bottom: 0.2rem;
-  text-align: center;
-  font-family: "Inter", sans-serif;
-}
-.sub-title {
-  font-size: 1.1rem;
-  color: #b3b3b3;
-  margin-bottom: 2.5rem;
-  font-weight: 500;
-  text-align: center;
-  font-family: "Inter", sans-serif;
-  text-transform: uppercase;
-}
+/* ── TITOLI ── */
+.main-title { font-size: 2.8rem; font-weight: 800; color: #ffffff; text-align: center; margin-bottom: 0.2rem; }
+.sub-title { font-size: 1rem; color: #b3b3b3; text-align: center; margin-bottom: 1.5rem; text-transform: uppercase; }
 
-/* ── SECTION TITLES (Con offset per lo scroll) ── */
-.section-title,
-.section-title-red,
-.section-title-blue {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffffff;
-  background: #181818;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-transform: uppercase;
-  font-family: "Inter", sans-serif;
-  scroll-margin-top: 30px;
+.section-title, .section-title-red, .section-title-blue {
+  font-size: 1.1rem; font-weight: 700; color: #ffffff; background: #181818; padding: 0.8rem 1rem;
+  border-radius: 8px; margin-bottom: 1.2rem; text-transform: uppercase; scroll-margin-top: 30px;
 }
-.section-title {
-  border-left: 4px solid #1db954;
-}
-.section-title-red {
-  border-left: 4px solid #ed4245;
-}
-.section-title-blue {
-  border-left: 4px solid #5865f2;
-}
+.section-title { border-left: 4px solid #1db954; }
+.section-title-red { border-left: 4px solid #ed4245; }
+.section-title-blue { border-left: 4px solid #5865f2; }
 
-/* ── STICKY BOTTOM NAV BAR ── */
+/* ── NAV BAR FISSA IN BASSO ── */
 .bottom-nav {
-  position: fixed;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 450px;
-  height: 65px;
-  background: rgba(18, 18, 18, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 40px;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 9999;
-  padding: 0 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  width: 90%; max-width: 450px; height: 65px; background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 40px; display: flex; justify-content: space-around; align-items: center;
+  z-index: 9999; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none !important;
-  border-bottom: none !important;
-  color: #8e9297 !important;
-  flex: 1;
-  transition: all 0.2s ease-in-out;
-  height: 100%;
-}
-/* Effetto al tocco (Mobile) o al passaggio del mouse (Desktop) */
-.nav-item:hover,
-.nav-item:active,
-.nav-item:focus {
-  color: #5865f2 !important;
-  transform: translateY(-2px);
-}
-.nav-item:hover .nav-icon,
-.nav-item:active .nav-icon,
-.nav-item:focus .nav-icon {
-  filter: drop-shadow(0 0 6px rgba(88, 101, 242, 0.6));
+.nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none !important; color: #8e9297 !important; flex: 1; }
+.nav-item:hover { color: #5865f2 !important; }
+.nav-icon { font-size: 20px; }
+.nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+/* ── TABELLE ── */
+.tbl-scroll { border-radius: 8px; overflow: auto; background: #181818; }
+.cal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #dcddde; }
+.cal-table th { background: #202225; color: #b3b3b3; padding: 12px; }
+.cal-table td { padding: 10px; }
+.num { text-align: center !important; }
+
+/* Medaglie */
+.row-gold td { background: rgba(255, 187, 0, 0.07) !important; }
+.row-silver td { background: rgba(180, 180, 180, 0.05) !important; }
+.row-bronze td { background: rgba(180, 100, 40, 0.06) !important; }
+.sep-row td { background: #202225 !important; color: #8e9297; font-size: 0.7rem; text-align: center; }
+
+/* Widget Custom */
+[data-testid="stSegmentedControl"] > div { background: #1e1e1e !important; border-radius: 8px !important; }
+
+/* 3. Centra i pulsanti del Segmented Control (Soglia) */
+[data-testid="stSegmentedControl"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-left: 100px !important;
 }
 
-.nav-icon {
-  font-size: 20px;
-  margin-bottom: 2px;
-  transition: 0.2s;
-}
-.nav-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* 4. Centra il Toggle (Forma Recente) */
+[data-testid="stCheckbox"] {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-left: 100px !important;
 }
 
-/* ── TABELLE E COMPONENTI ── */
-.tbl-scroll {
-  border-radius: 8px;
-  overflow-x: auto;
-  overflow-y: auto;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  background: #181818;
-}
-.cal-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-  color: #dcddde;
-}
-.cal-table th {
-  background: #202225;
-  color: #b3b3b3;
-  padding: 12px;
-  text-align: left;
-}
-.cal-table td {
-  padding: 10px;
-}
-.cal-table tr:hover td {
-  background: #2f3136;
-}
-.num {
-  text-align: center !important;
-}
-
-/* Medaglie e Gerarchia Righe */
-.row-gold td {
-  background: rgba(255, 187, 0, 0.07) !important;
-}
-.row-silver td {
-  background: rgba(180, 180, 180, 0.05) !important;
-}
-.row-bronze td {
-  background: rgba(180, 100, 40, 0.06) !important;
-}
-.sep-row td {
-  background: #202225 !important;
-  color: #8e9297;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-}
-.title-row td {
-  font-size: 1.25rem;
-  color: #ffffff;
-  text-transform: uppercase;
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-  text-align: center;
-  font-weight: 700;
-}
 /* Barra Percentuale Custom */
 .pct-wrap {
   display: flex;
@@ -208,103 +88,46 @@ html {
 
 /* Mobile Overrides */
 @media screen and (max-width: 768px) {
-  .hide-mob {
-    display: none !important;
-  }
-  .main-title {
-    font-size: 2rem;
-  }
-  .sub-title {
-    font-size: 1rem;
-  }
-  .section-title,
-  .section-title-red,
-  .section-title-blue {
+  .hide-mob { display: none !important; }
+  .main-title { font-size: 2rem; }
+  .sub-title { font-size: 1rem; }
+  .section-title, .section-title-red, .section-title-blue {
     font-size: 0.9rem;
     padding: 0.6rem 0.8rem;
   }
-  .cal-table td,
-  .cal-table th {
+  .cal-table td, .cal-table th {
     font-size: 13px !important;
     padding: 8px 6px !important;
   }
-  .sep-row td {
-    font-size: 0.65rem !important;
+  .sep-row td { font-size: 0.65rem !important; }
+  .block-container { padding-bottom: 120px !important; }
+  /* Layout Selettori Mobile: Riga 1 (100%), Riga 2 (50% + 50%) */
+  [data-testid="stHorizontalBlock"]:has(> div:nth-child(3):last-child) {
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
   }
-  .block-container {
-    padding-bottom: 120px !important;
+  
+  /* Colonna 1 (Lega): occupa il 100% della larghezza */
+  [data-testid="stHorizontalBlock"]:has(> div:nth-child(3):last-child) > div:nth-child(1) {
+      min-width: 100% !important;
+      flex: 0 0 100% !important;
+  }
+  
+  /* Colonna 2 (Soglia) e Colonna 3 (Forma): occupano metà spazio ciascuna */
+  [data-testid="stHorizontalBlock"]:has(> div:nth-child(3):last-child) > div:nth-child(2),
+  [data-testid="stHorizontalBlock"]:has(> div:nth-child(3):last-child) > div:nth-child(3) {
+      min-width: calc(50% - 0.5rem) !important; /* Tiene conto dello spazio (gap) di Streamlit */
+      flex: 1 1 auto !important;
   }
 }
 
-/* ── WIDGET STYLING ── */
-div[data-baseweb="select"] > div {
-  background: #1e1e1e !important;
-  border-color: #2f3136 !important;
-  border-radius: 8px !important;
-  transition: border-color 0.2s;
-}
-div[data-baseweb="select"] > div:hover {
-  border-color: #5865f2 !important;
-}
-div[data-baseweb="select"] input,
-div[data-baseweb="select"] [role="combobox"] {
-  cursor: pointer !important;
-  user-select: none !important;
-}
 
-[data-baseweb="menu"] {
-  background: #1e1e1e !important;
-  border: 1px solid #2f3136 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
-}
-[data-baseweb="option"] {
-  background: #1e1e1e !important;
-  color: #dcddde !important;
-  cursor: pointer !important;
-}
-[data-baseweb="option"]:hover {
-  background: #2f3136 !important;
-}
 
-[data-testid="stSegmentedControl"] > div {
-  background: #1e1e1e !important;
-  border: 1px solid #2f3136 !important;
-  border-radius: 8px !important;
-  padding: 3px !important;
-  gap: 3px !important;
-}
-[data-testid="stSegmentedControl"] button {
-  border-radius: 6px !important;
-  font-weight: 600 !important;
-  color: #8e9297 !important;
-  border: none !important;
-  transition:
-    background 0.2s,
-    color 0.2s !important;
-}
-[data-testid="stSegmentedControl"] button[aria-selected="true"] {
-  background: #5865f2 !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(88, 101, 242, 0.4) !important;
-}
-
-[data-testid="stWidgetLabel"] p {
-  color: #b3b3b3 !important;
-  font-size: 0.8rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.04em !important;
-  text-transform: uppercase !important;
-}
-
+/* ── FOOTER CUSTOM ── */
 .footer {
   text-align: center;
   font-size: 1rem;
   color: #8e9297;
   margin-top: 2rem;
-}
-
-footer,
-#MainMenu {
-  visibility: hidden;
+  margin-bottom: 2rem;
 }

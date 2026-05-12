@@ -37,14 +37,27 @@ def build_stats_table(df, tipo, soglia):
 def build_calendario(df):
     rows = ""
     for _, r in df.iterrows():
-        dt = r['data_ora'].strftime('%d/%m - %H:%M') if isinstance(r['data_ora'], datetime) else str(r['data_ora'])[:16]
+        # Prende i primi 16 caratteri: "2026-05-16T13:30"
+        raw_date = str(r['data_ora'])[:16] 
+        
+        # Estrapola e riordina i segmenti se la stringa ha la lunghezza corretta
+        if len(raw_date) == 16 and "T" in raw_date:
+            anno = raw_date[0:4]
+            mese = raw_date[5:7]
+            giorno = raw_date[8:10]
+            ora = raw_date[11:16]
+            dt_formatted = f"{giorno}/{mese}/{anno} {ora}"
+        else:
+            # Fallback di sicurezza
+            dt_formatted = raw_date.replace('T', ' ')
+
         rows += (
             f"<tr>"
             f"<td class='num' style='color:#5865F2; font-weight:700'>{r['giornata']}</td>"
             f"<td style='text-align:center;'><b>{r['squadra_casa']}</b></td>"
             f"<td style='text-align:center; color:#8e9297'>vs</td>"
             f"<td style='text-align:center;'><b>{r['squadra_trasferta']}</b></td>"
-            f"<td style='color:#8e9297;'>{dt}</td>"
+            f"<td style='color:#8e9297; text-align:center'>{dt_formatted}</td>"
             f"</tr>"
         )
     return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>Turno</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th>Data</th></tr></thead><tbody>{rows}</tbody></table></div>"
@@ -63,7 +76,7 @@ def build_prediction_table(df):
             f"<td>{pct_bar_html(r['Prob %'], c)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Match</th><th class='num hide-mob'>xG C</th><th class='num hide-mob'>xG T</th><th class='num hide-mob'>Tot</th><th>Consiglio</th><th>Affidabilità</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Match</th><th class='num hide-mob'>xG C</th><th class='num hide-mob'>xG T</th><th class='num hide-mob'>Tot</th><th style='text-align:center'>Consiglio</th><th style='text-align:center'>Affidabilità</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_gol_table(df):
     rows = ""

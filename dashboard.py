@@ -4,176 +4,122 @@ import query
 import stats_engine
 import ui_components
 
-# 1. CONFIGURAZIONE PAGINA
+# 1. CONFIGURAZIONE
 st.set_page_config(page_title="XG Football Analytics", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CARICAMENTO STILI CSS ESTERNI
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# 3. CONNESSIONE DB E HELPERS
 conn = st.connection("calcio_db", type="sql", url="sqlite:///calcio.db")
 
 def query_leghe():
     return conn.query(query.LISTA_LEGHE_SQL, ttl=3600)["lega"].tolist()
 
-def _soglia_widget(label: str, key: str) -> float:
-    ss_key = f"_soglia_val_{key}"
-    if ss_key not in st.session_state: st.session_state[ss_key] = 2.5
-    if st.session_state.get(key) is None: st.session_state[key] = st.session_state[ss_key]
-    val = st.segmented_control(label, options=[2.5, 3.5], key=key)
-    if val is not None: st.session_state[ss_key] = val
-    return st.session_state[ss_key]
+leghe_disp = query_leghe()
 
-# 4. LAYOUT INTERFACCIA
+# 2. TITOLI E NAV BAR
 st.markdown('<div class="main-title">XG Football Analytics</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Advanced Data & Predictions System</div>', unsafe_allow_html=True)
 st.markdown(ui_components.build_bottom_nav(), unsafe_allow_html=True)
 
-leghe_disp = query_leghe()
+# 3. CONSOLE DI COMANDO UNIFICATA
+with st.container(border=True):
+    c_f1, c_f2, c_f3 = st.columns([2, 1, 1])
+    with c_f1:
+        global_lega = st.selectbox("🌍 Lega:", options=leghe_disp, key="g_lega")
+    with c_f2:
+        global_soglia = st.segmented_control("🎯 Soglia:", options=[2.5, 3.5], key="g_soglia")
+        if global_soglia is None: global_soglia = 2.5
+    with c_f3:
+        st.write("") # Spaziatore per allineamento
+        forma = st.toggle("📈 Forma Recente", value=True, key="g_forma")
 
-# --- SEZIONE PREVISIONI ---
+st.divider()
+
+# --- SEZIONE 1: PREVISIONI (Spostata in alto) ---
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni </div>', unsafe_allow_html=True)
 
-cp1, cp2, cp3 = st.columns([2, 1, 1])
-
-with cp1: 
-    lega_pred = st.selectbox("Seleziona Lega:", options=leghe_disp, key="pred_box")
-
-with cp2: 
-    soglia_pred = _soglia_widget("Soglia Gol:", "pred_soglia")
-
-with cp3:
-    forma = st.toggle(
-        "Forma Recente", 
-        value=True, 
-        key="forma", 
-        help="Applica un peso maggiore alle partite più recenti usando l'Alpha calibrato specificamente per questa lega."
-    )
-
-with st.spinner("Calcolo in corso..."):
-    # 1. Recupero dinamico dell'Alpha calibrato dal Database
+with st.spinner("Analisi in corso..."):
+    # Recupero Alpha
     try:
-        # Cerchiamo l'alpha specifico per la lega nella nuova tabella
-        df_params = conn.query(
-            "SELECT alpha FROM parametri_leghe WHERE lega = :lega", 
-            params={"lega": lega_pred}, 
-            ttl=3600
-        )
-        # Se trovato lo usiamo, altrimenti fallback a 0.12
-        alpha_db = df_params['alpha'].iloc[0] if not df_params.empty else 0.12
-    except Exception:
-        # In caso di errore (es. tabella non ancora creata), usiamo il default
-        alpha_db = 0.12
+        df_p = conn.query("SELECT alpha FROM parametri_leghe WHERE lega = :l", params={"l": global_lega}, ttl=3600)
+        alpha_db = df_p['alpha'].iloc[0] if not df_p.empty else 0.12
+    except: alpha_db = 0.12
     
-    # Se il toggle è attivo usiamo l'alpha calibrato, altrimenti 0.0 (tutte le partite pesano uguale)
     alpha_finale = alpha_db if forma else 0.0
-
-        # 2. Recupero dati per il calcolo
-    df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": lega_pred}, ttl=3600)
-    # [span_2](start_span)Cambiato nome query[span_2](end_span)
-    df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_pred}, ttl=3600)
+    df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": global_lega}, ttl=3600)
+    df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": global_lega}, ttl=3600)
     
-     # 3. Divisione Dati e Calcolo Previsioni
-    df_cal_rec = df_cal[df_cal['is_recupero'] == 1]
-    df_cal_std = df_cal[df_cal['is_recupero'] == 0]
+    mostrato = False
+    if not df_cal.empty:
+        df_fut = df_cal[pd.to_datetime(df_cal['data_ora'], utc=True) >= pd.Timestamp.now(tz='UTC')]
+        
+        # Recuperi
+        df_rec = df_fut[df_fut['is_recupero'] == 1]
+        if not df_rec.empty:
+            p_rec = stats_engine.calculate_predictions(df_raw, df_rec, global_soglia, alpha_finale)
+            if not p_rec.empty:
+                st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 RECUPERI</div>', unsafe_allow_html=True)
+                st.html(ui_components.build_prediction_table(p_rec))
+                st.divider()
+                mostrato = True
 
-    # --- SOTTO-SEZIONE RECUPERI ---
-    if not df_cal_rec.empty:
-        preds_rec = stats_engine.calculate_predictions(df_raw, df_cal_rec, soglia_pred, alpha_finale)
-        if not preds_rec.empty:
-            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔮 PREVISIONI RECUPERI</div>', unsafe_allow_html=True)
-            st.html(ui_components.build_prediction_table(preds_rec))
-            st.divider()
-
-    # --- SOTTO-SEZIONE TURNO STANDARD ---
-    if not df_cal_std.empty:
-        preds_std = stats_engine.calculate_predictions(df_raw, df_cal_std, soglia_pred, alpha_finale)
-        if not preds_std.empty:
-            g_num = df_cal_std['giornata'].iloc[0]
-            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">🔮 PREVISIONI TURNO PRINCIPALE</div>', unsafe_allow_html=True)
-            st.html(ui_components.build_prediction_table(preds_std))
+        # Turno Standard
+        df_std = df_fut[df_fut['is_recupero'] == 0]
+        if not df_std.empty:
+            g_target = df_std['giornata'].iloc[0]
+            df_curr_p = df_std[df_std['giornata'] == g_target]
+            p_std = stats_engine.calculate_predictions(df_raw, df_curr_p, global_soglia, alpha_finale)
+            if not p_std.empty:
+                st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 TURNO PRINCIPALE</div>', unsafe_allow_html=True)
+                st.html(ui_components.build_prediction_table(p_std))
+                mostrato = True
     
-    if df_cal_rec.empty and df_cal_std.empty:
-        st.warning("Dati insufficienti per generare le previsioni per questa lega.")
-
-        # Mostriamo all'utente quale valore di Alpha sta usando il modello per trasparenza
-        st.markdown(
-            f"<div style='text-align:right; font-size:0.8rem; color:#8e9297;'>"
-            f"Parametro Alpha utilizzato: <b>{alpha_finale}</b>"
-            f"</div>", 
-            unsafe_allow_html=True
-        )
+    if not mostrato: st.warning("Nessuna previsione disponibile.")
+    st.markdown(f"<div style='text-align:right; font-size:0.7rem; color:#8e9297;'>Alpha: {alpha_finale}</div>", unsafe_allow_html=True)
 
 st.divider()
 
-# --- SEZIONE CALENDARIO ---
-st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario e Recuperi</div>', unsafe_allow_html=True)
-lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
-
-# Eseguiamo la nuova query dettagliata
-df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_cal}, ttl=3600)
+# --- SEZIONE 2: CALENDARIO ---
+st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario</div>', unsafe_allow_html=True)
 
 if not df_cal.empty:
-    df_cal['data_ora'] = pd.to_datetime(df_cal['data_ora'], utc=True)
-    now = pd.Timestamp.now(tz='UTC')
+    df_viva = df_cal[pd.to_datetime(df_cal['data_ora'], utc=True) >= pd.Timestamp.now(tz='UTC')]
     
-    # Filtriamo solo i match futuri
-    df_display = df_cal[df_cal['data_ora'] >= now]
+    # Recuperi
+    df_c_rec = df_viva[df_viva['is_recupero'] == 1]
+    if not df_c_rec.empty:
+        st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 RECUPERI</div>', unsafe_allow_html=True)
+        st.html(ui_components.build_calendario(df_c_rec))
+        st.divider()
     
-    if not df_display.empty:
-        # 1. Visualizzazione RECUPERI (se presenti)
-        df_rec = df_display[df_display['is_recupero'] == 1]
-        if not df_rec.empty:
-            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 PARTITE DI RECUPERO</div>', unsafe_allow_html=True)
-            st.html(ui_components.build_calendario(df_rec))
-            st.divider()
-        
-                # 2. Visualizzazione TURNO PRINCIPALE
-        df_std = df_display[df_display['is_recupero'] == 0]
-        if not df_std.empty:
-            g_num = df_std['giornata'].iloc[0]
-            
-            # FILTRO AGGIUNTO: teniamo solo le partite di QUESTA singola giornata
-            df_std_current = df_std[df_std['giornata'] == g_num]
-            
-            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO</div>', unsafe_allow_html=True)
-            st.html(ui_components.build_calendario(df_std_current))
-
-    else:
-        st.info("Nessun match in programma.")
-
+    # Turno Standard (Rimosso il numero giornata tra parentesi)
+    df_c_std = df_viva[df_viva['is_recupero'] == 0]
+    if not df_c_std.empty:
+        g_c = df_c_std['giornata'].iloc[0]
+        st.markdown('<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO</div>', unsafe_allow_html=True)
+        st.html(ui_components.build_calendario(df_c_std[df_c_std['giornata'] == g_c]))
 else:
-    st.html(ui_components.build_empty_state(
-        "📅", "Nessuna partita in programma",
-        f"Il calendario per {lega_cal} non contiene partite future."
-    ))
+    st.info("Calendario non disponibile.")
 
 st.divider()
 
-# --- SEZIONE STATISTICHE ---
-st.markdown('<div id="statistiche" class="section-title">📊 Ranking </div>', unsafe_allow_html=True)
-soglia_stats = _soglia_widget("Soglia Gol:", "stats_soglia")
-c1, c2 = st.columns(2)
-with c1:
-    with st.spinner(""):
-        df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.html(ui_components.build_stats_table(df_ov, "over", soglia_stats))
-with c2:
-    with st.spinner(""):
-        df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": soglia_stats, "limit": 20}, ttl=3600)
-    st.html(ui_components.build_stats_table(df_un, "under", soglia_stats))
+# --- SEZIONE 3: RANKING (Limite ridotto a 15) ---
+st.markdown('<div id="statistiche" class="section-title">📊 Ranking Globale </div>', unsafe_allow_html=True)
+r1, r2 = st.columns(2)
+with r1:
+    df_ov = conn.query(query.TOP_OVER_SQL, params={"soglia": global_soglia, "limit": 15}, ttl=3600)
+    st.html(ui_components.build_stats_table(df_ov, "over", global_soglia))
+with r2:
+    df_un = conn.query(query.TOP_UNDER_SQL, params={"soglia": global_soglia, "limit": 15}, ttl=3600)
+    st.html(ui_components.build_stats_table(df_un, "under", global_soglia))
 
 st.divider()
 
-# --- SEZIONE RETI ---
+# --- SEZIONE 4: RETI ---
 st.markdown('<div id="reti" class="section-title-blue">🎯 Performance Reti </div>', unsafe_allow_html=True)
-lega_sel = st.selectbox("Seleziona Lega:", options=leghe_disp, key="gol_lega")
-with st.spinner(""):
-    df_gol = conn.query(query.GOL_LEGA_SQL, params={"lega": lega_sel}, ttl=3600)
-st.html(ui_components.build_gol_table(df_gol))
+df_g = conn.query(query.GOL_LEGA_SQL, params={"lega": global_lega}, ttl=3600)
+st.html(ui_components.build_gol_table(df_g))
 
 st.divider()
-
-# --- SEZIONE FOOTER ---
 st.markdown('<div class="footer">Made with ❤️ by Roosco | Data from Football-Data.org</div>', unsafe_allow_html=True)
