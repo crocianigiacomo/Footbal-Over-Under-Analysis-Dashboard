@@ -69,12 +69,19 @@ with st.spinner("Calcolo in corso..."):
     # Se il toggle è attivo usiamo l'alpha calibrato, altrimenti 0.0 (tutte le partite pesano uguale)
     alpha_finale = alpha_db if forma else 0.0
 
-    # 2. Recupero dati per il calcolo
+        # 2. Recupero dati per il calcolo
     df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": lega_pred}, ttl=3600)
-    df_cal = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_pred}, ttl=3600)
+    # [span_2](start_span)Cambiato nome query[span_2](end_span)
+    df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_pred}, ttl=3600)
     
     # 3. Esecuzione del motore statistico
+    if not df_cal.empty:
+        # [span_3](start_span)Filtro per passare al motore solo partite da ora in poi[span_3](end_span)
+        df_cal['data_ora'] = pd.to_datetime(df_cal['data_ora'], utc=True)
+        df_cal = df_cal[df_cal['data_ora'] >= pd.Timestamp.now(tz='UTC')]
+        
     preds_df = stats_engine.calculate_predictions(df_raw, df_cal, soglia_pred, alpha_finale)
+
     
     # 4. Visualizzazione Risultati
     if not preds_df.empty:
