@@ -74,18 +74,29 @@ with st.spinner("Calcolo in corso..."):
     # [span_2](start_span)Cambiato nome query[span_2](end_span)
     df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_pred}, ttl=3600)
     
-    # 3. Esecuzione del motore statistico
-    if not df_cal.empty:
-        # [span_3](start_span)Filtro per passare al motore solo partite da ora in poi[span_3](end_span)
-        df_cal['data_ora'] = pd.to_datetime(df_cal['data_ora'], utc=True)
-        df_cal = df_cal[df_cal['data_ora'] >= pd.Timestamp.now(tz='UTC')]
-        
-    preds_df = stats_engine.calculate_predictions(df_raw, df_cal, soglia_pred, alpha_finale)
+     # 3. Divisione Dati e Calcolo Previsioni
+    df_cal_rec = df_cal[df_cal['is_recupero'] == 1]
+    df_cal_std = df_cal[df_cal['is_recupero'] == 0]
 
+    # --- SOTTO-SEZIONE RECUPERI ---
+    if not df_cal_rec.empty:
+        preds_rec = stats_engine.calculate_predictions(df_raw, df_cal_rec, soglia_pred, alpha_finale)
+        if not preds_rec.empty:
+            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔮 PREVISIONI RECUPERI</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_prediction_table(preds_rec))
+            st.divider()
+
+    # --- SOTTO-SEZIONE TURNO STANDARD ---
+    if not df_cal_std.empty:
+        preds_std = stats_engine.calculate_predictions(df_raw, df_cal_std, soglia_pred, alpha_finale)
+        if not preds_std.empty:
+            g_num = df_cal_std['giornata'].iloc[0]
+            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">🔮 PREVISIONI TURNO PRINCIPALE</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_prediction_table(preds_std))
     
-    # 4. Visualizzazione Risultati
-    if not preds_df.empty:
-        st.html(ui_components.build_prediction_table(preds_df))
+    if df_cal_rec.empty and df_cal_std.empty:
+        st.warning("Dati insufficienti per generare le previsioni per questa lega.")
+
         # Mostriamo all'utente quale valore di Alpha sta usando il modello per trasparenza
         st.markdown(
             f"<div style='text-align:right; font-size:0.8rem; color:#8e9297;'>"
