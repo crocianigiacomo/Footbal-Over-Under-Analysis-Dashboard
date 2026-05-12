@@ -95,14 +95,36 @@ with st.spinner("Calcolo in corso..."):
 st.divider()
 
 # --- SEZIONE CALENDARIO ---
-st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario Prossimo Turno</div>', unsafe_allow_html=True)
+st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario e Recuperi</div>', unsafe_allow_html=True)
 lega_cal = st.selectbox("Seleziona Lega:", options=leghe_disp, key="cal_box")
-with st.spinner(""):
-    df_next = conn.query(query.CALENDARIO_LEGA_SQL, params={"lega": lega_cal}, ttl=3600)
-if not df_next.empty:
-    df_next['data_ora'] = pd.to_datetime(df_next['data_ora'])
-    g_prox = df_next.sort_values('data_ora').iloc[0]['giornata']
-    st.html(ui_components.build_calendario(df_next[df_next['giornata'] == g_prox]))
+
+# Eseguiamo la nuova query dettagliata
+df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega_cal}, ttl=3600)
+
+if not df_cal.empty:
+    df_cal['data_ora'] = pd.to_datetime(df_cal['data_ora'], utc=True)
+    now = pd.Timestamp.now(tz='UTC')
+    
+    # Filtriamo solo i match futuri
+    df_display = df_cal[df_cal['data_ora'] >= now]
+    
+    if not df_display.empty:
+        # 1. Visualizzazione RECUPERI (se presenti)
+        df_rec = df_display[df_display['is_recupero'] == 1]
+        if not df_rec.empty:
+            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 PARTITE DI RECUPERO</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_calendario(df_rec))
+            st.divider()
+        
+        # 2. Visualizzazione TURNO PRINCIPALE
+        df_std = df_display[df_display['is_recupero'] == 0]
+        if not df_std.empty:
+            g_num = df_std['giornata'].iloc[0]
+            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO (Giornata {g_num})</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_calendario(df_std))
+    else:
+        st.info("Nessun match in programma.")
+
 else:
     st.html(ui_components.build_empty_state(
         "📅", "Nessuna partita in programma",
