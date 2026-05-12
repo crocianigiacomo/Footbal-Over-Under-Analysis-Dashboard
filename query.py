@@ -57,11 +57,24 @@ GOL_LEGA_SQL = """
     ORDER BY totgf DESC
 """
 
-CALENDARIO_LEGA_SQL = """
-    SELECT giornata, squadra_casa, squadra_trasferta, data_ora 
-    FROM calendario 
-    WHERE lega = :lega 
-    ORDER BY giornata ASC, data_ora ASC
+CALENDARIO_DETTAGLIATO_SQL = """
+    WITH GiornataPrincipale AS (
+        -- Identifica la giornata con il maggior numero di match futuri
+        SELECT giornata 
+        FROM calendario 
+        WHERE lega = :lega 
+        GROUP BY giornata 
+        ORDER BY COUNT(*) DESC LIMIT 1
+    )
+    SELECT 
+        giornata, squadra_casa, squadra_trasferta, data_ora,
+        CASE 
+            WHEN giornata < (SELECT giornata FROM GiornataPrincipale) THEN 1 
+            ELSE 0 
+        END AS is_recupero
+    FROM calendario
+    WHERE lega = :lega
+    ORDER BY data_ora ASC
 """
 
 # Dati grezzi per calcolo pesi temporali e stima rho in Python
