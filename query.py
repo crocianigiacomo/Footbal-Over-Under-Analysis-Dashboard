@@ -59,12 +59,10 @@ GOL_LEGA_SQL = """
 
 CALENDARIO_DETTAGLIATO_SQL = """
     WITH GiornataPrincipale AS (
-        -- Identifica la giornata con il maggior numero di match futuri
-        SELECT giornata 
+        -- Ora la giornata principale è semplicemente l'ultima caricata dallo scraper
+        SELECT MAX(giornata) AS giornata 
         FROM calendario 
         WHERE lega = :lega 
-        GROUP BY giornata 
-        ORDER BY COUNT(*) DESC LIMIT 1
     )
     SELECT 
         giornata, squadra_casa, squadra_trasferta, data_ora,
