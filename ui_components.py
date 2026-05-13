@@ -1,4 +1,5 @@
 from datetime import datetime
+import pandas as pd
 
 def pct_bar_html(value, color):
     return (
@@ -15,7 +16,6 @@ def build_stats_table(df, tipo, soglia):
     MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
     ROW_CLASS = {1: "row-gold", 2: "row-silver", 3: "row-bronze"}
     
-
     for rank, (_, r) in enumerate(df.iterrows(), start=1):
         if rank == 6: rows += f"<tr class='sep-row'><td colspan='5'>— Altre Squadre —</td></tr>"
         pct = r["pct"]
@@ -26,30 +26,32 @@ def build_stats_table(df, tipo, soglia):
         rows += (
             f"<tr class='{row_cls}'>"
             f"<td class='num'>{rank_cel}</td>"
-            f"<td class='hide-mob' style='text-align:center;'>{r['lega']}</td>"
-            f"<td style='text-align:center;'><b>{r['squadra']}</b></td>"
+            f"<td class='hide-mob'>{r['lega']}</td>"
+            f"<td><b>{r['squadra']}</b></td>"
             f"<td class='num'>{int(r[val_col])}/{int(r['partite'])}</td>"
             f"<td>{pct_bar_html(pct, color)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5' style='text-align:center; text-transform:uppercase;'>top {tipo}</td></tr><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr class='title-row'><td colspan='5'>top {tipo}</td></tr><tr><th style='text-align:center;'>#</th><th class='hide-mob'>Lega</th><th>Squadra</th><th style='text-align:center;'>Esiti</th><th style= 'text-transform:uppercase;'>% {tipo}</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_calendario(df):
     rows = ""
     for _, r in df.iterrows():
-        # Prende i primi 16 caratteri: "2026-05-16T13:30"
-        raw_date = str(r['data_ora'])[:16] 
-        
-        # Estrapola e riordina i segmenti se la stringa ha la lunghezza corretta
-        if len(raw_date) == 16 and "T" in raw_date:
-            anno = raw_date[0:4]
-            mese = raw_date[5:7]
-            giorno = raw_date[8:10]
-            ora = raw_date[11:16]
-            dt_formatted = f"{giorno}/{mese}/{anno} {ora}"
+        # --- LOGICA RISULTATO vs DATA ---
+        if r['data_ora'] == 'FINISHED':
+            # Se la partita è già conclusa (ricevuta dalla UNION in query.py)
+            score_str = f"{int(r['gol_casa'])} - {int(r['gol_trasferta'])}"
+            info_html = f"<span style='background:#2f3136; padding: 3px 8px; border-radius:4px; font-weight:bold; color:#1DB954;'>{score_str}</span>"
         else:
-            # Fallback di sicurezza
-            dt_formatted = raw_date.replace('T', ' ')
+            # Se la partita è da giocare
+            raw_date = str(r['data_ora'])[:16] 
+            if len(raw_date) == 16 and "T" in raw_date:
+                anno, mese, giorno = raw_date[0:4], raw_date[5:7], raw_date[8:10]
+                ora = raw_date[11:16]
+                dt_formatted = f"{giorno}/{mese}/{anno} {ora}"
+            else:
+                dt_formatted = raw_date.replace('T', ' ')
+            info_html = f"<span style='color:#8e9297;'>{dt_formatted}</span>"
 
         rows += (
             f"<tr>"
@@ -57,10 +59,10 @@ def build_calendario(df):
             f"<td style='text-align:center;'><b>{r['squadra_casa']}</b></td>"
             f"<td style='text-align:center; color:#8e9297'>vs</td>"
             f"<td style='text-align:center;'><b>{r['squadra_trasferta']}</b></td>"
-            f"<td style='color:#8e9297; text-align:center'>{dt_formatted}</td>"
+            f"<td style='text-align:center;'>{info_html}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>Turno</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th>Data</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th style='text-align:center;'>Turno</th><th style='text-align:center;'>Casa</th><th></th><th style='text-align:center;'>Trasferta</th><th style='text-align:center;'>Data / Risultato</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_prediction_table(df):
     rows = ""
@@ -72,11 +74,11 @@ def build_prediction_table(df):
             f"<td class='num hide-mob'>{r['Gol Attesi Casa']}</td>"
             f"<td class='num hide-mob'>{r['Gol Attesi Trasferta']}</td>"
             f"<td class='num hide-mob'><b>{r['Gol Attesi Totali']}</b></td>"
-            f"<td style='text-align:center;'><span style='color:{c};font-weight:bold;'>{r['Esito']}</span></td>"
-            f"<td>{pct_bar_html(r['Prob %'], c)}</td>"
+            f"<td style='text-align:center;'><span style='color:{c};font-weight:bold'>{r['Esito']}</span></td>"
+            f"<td style='text-align:center;'>{pct_bar_html(r['Prob %'], c)}</td>"
             f"</tr>"
         )
-    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Match</th><th class='num hide-mob'>xG C</th><th class='num hide-mob'>xG T</th><th class='num hide-mob'>Tot</th><th style='text-align:center'>Consiglio</th><th style='text-align:center'>Affidabilità</th></tr></thead><tbody>{rows}</tbody></table></div>"
+    return f"<div class='tbl-scroll'><table class='cal-table'><thead><tr><th>Match</th><th class='num hide-mob'>xG C</th><th class='num hide-mob'>xG T</th><th class='num hide-mob'>Tot</th><th style='text-align:center;'>Consiglio</th><th style='text-align:center;'>Affidabilità</th></tr></thead><tbody>{rows}</tbody></table></div>"
 
 def build_gol_table(df):
     rows = ""
@@ -164,8 +166,7 @@ def build_bottom_nav():
         <a href="#previsioni" class="nav-item"><span class="nav-icon">🔮</span><span class="nav-label">Predict</span></a>
         <a href="#calendario" class="nav-item"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
         <a href="#statistiche" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Rank</span></a>
-        <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>
-        <a href="#schedina" class="nav-item"><span class="nav-icon">🎟️</span><span class="nav-label">Schedina</span></a>        
+        <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>        
     </div>
     """
 
