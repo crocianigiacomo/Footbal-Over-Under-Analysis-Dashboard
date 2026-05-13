@@ -167,7 +167,7 @@ def build_bottom_nav():
         <a href="#calendario" class="nav-item"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
         <a href="#statistiche" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Rank</span></a>
         <a href="#reti" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Gol Stats</span></a>
-        <a href="#schedina" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Schedina</span></a> 
+        <a href="#schedina" class="nav-item"><span class="nav-icon">🎟️</span><span class="nav-label">Schedina</span></a> 
     </div>
     """
 
