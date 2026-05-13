@@ -7,13 +7,11 @@ import ui_components
 # --- FUNZIONE AGGREGATRICE IN CACHE ---
 @st.cache_data(ttl=3600, show_spinner=False)
 def genera_schedina_globale(leghe_disponibili):
-    import sqlite3 # Usiamo la libreria nativa per bypassare il pool di SQLAlchemy
+    import sqlite3
     tutte_predizioni = []
     
-    # Apriamo UNA singola connessione diretta e velocissima
     with sqlite3.connect('calcio.db') as db:
         for lega in leghe_disponibili:
-            # pd.read_sql lavora perfettamente in nativo con sqlite3
             df_p = pd.read_sql("SELECT alpha FROM parametri_leghe WHERE lega = :lega", db, params={"lega": lega})
             alpha_l = df_p['alpha'].iloc[0] if not df_p.empty else 0.12
             
@@ -23,19 +21,25 @@ def genera_schedina_globale(leghe_disponibili):
             if not df_cal_l.empty:
                 df_fut_l = df_cal_l[(pd.to_datetime(df_cal_l['data_ora'], utc=True) >= pd.Timestamp.now(tz='UTC')) & (df_cal_l['is_recupero'] == 0)]
                 
-                # Calcoliamo per entrambe le soglie
-                for s in [2.5, 3.5]:
-                    p_res = stats_engine.calculate_predictions(df_raw_l, df_fut_l, s, alpha_l)
-                    if not p_res.empty:
-                        p_res['Lega'] = lega
-                        tutte_predizioni.append(p_res)
-                        
+                # --- FIX: ISOLIAMO SOLO IL PROSSIMO TURNO ---
+                if not df_fut_l.empty:
+                    g_target = df_fut_l['giornata'].iloc[0] # Trova la prossima giornata giocabile
+                    df_turno_corrente = df_fut_l[df_fut_l['giornata'] == g_target] # Filtra solo quella
+                    
+                    # Calcoliamo per entrambe le soglie SOLO sul turno corrente
+                    for s in [2.5, 3.5]:
+                        p_res = stats_engine.calculate_predictions(df_raw_l, df_turno_corrente, s, alpha_l)
+                        if not p_res.empty:
+                            p_res['Lega'] = lega
+                            tutte_predizioni.append(p_res)
+                            
     if not tutte_predizioni:
         return pd.DataFrame()
 
     df_total = pd.concat(tutte_predizioni, ignore_index=True)
     # Ordina per affidabilità e prende i top 10 globali
     return df_total.sort_values(by="Prob %", ascending=False).head(10)
+
 
 # 1. CONFIGURAZIONE
 st.set_page_config(page_title="XG Football Analytics", layout="wide", initial_sidebar_state="collapsed")
