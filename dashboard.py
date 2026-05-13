@@ -23,8 +23,9 @@ def genera_schedina_globale(leghe_disponibili):
             df_params = pd.read_sql("SELECT alpha, giornata_target FROM parametri_leghe WHERE lega = :l", db, params={"l": lega})
             if df_params.empty: continue
             
-            alpha_l = df_params['alpha'].iloc[0]
-            gt_l = df_params['giornata_target'].iloc[0]
+            # FIX CHIAVE: Forziamo la conversione in tipi Python standard!
+            alpha_l = float(df_params['alpha'].iloc[0])
+            gt_l = int(df_params['giornata_target'].iloc[0]) 
             
             # Recupero dati per il motore e i soli match DA GIOCARE della Giornata Target
             df_raw_l = pd.read_sql(query.MATCH_DATA_SQL, db, params={"lega": lega})
@@ -39,7 +40,6 @@ def genera_schedina_globale(leghe_disponibili):
                             
     if not tutte_predizioni: return pd.DataFrame()
     return pd.concat(tutte_predizioni, ignore_index=True).sort_values(by="Prob %", ascending=False).head(10)
-
 
 # 2. CARICAMENTO DATI INIZIALI
 def query_leghe():
