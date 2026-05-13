@@ -67,17 +67,19 @@ CALENDARIO_DETTAGLIATO_SQL = """
     SELECT 
         giornata, squadra_casa, squadra_trasferta, data_ora,
         NULL as gol_casa, NULL as gol_trasferta,
-        CASE WHEN giornata < (SELECT giornata_target FROM Target) THEN 1 ELSE 0 END AS is_recupero
+        CASE WHEN giornata < (SELECT giornata_target FROM Target) THEN 1 ELSE 0 END AS is_recupero,
+        'SCHEDULED' as match_status
     FROM calendario
     WHERE lega = :lega
     
     UNION ALL
 
-    -- 2. Match già conclusi della Giornata Target (per completare il quadro visivo)
+   -- 2. Match già conclusi (Status dedicato, data_ora a NULL)
     SELECT 
-        giornata, squadra_casa, squadra_trasferta, 'FINISHED' as data_ora,
+        giornata, squadra_casa, squadra_trasferta, NULL as data_ora,
         gol_casa, gol_trasferta,
-        0 AS is_recupero
+        0 AS is_recupero,
+        'FINISHED' as match_status
     FROM partite
     WHERE lega = :lega AND giornata = (SELECT giornata_target FROM Target)
     
@@ -98,4 +100,14 @@ MATCH_DATA_SQL = """
     FROM partite
     WHERE lega = :lega
     ORDER BY giornata ASC
+"""
+
+# PULIZIA CALENDARIO (Mantiene il DB leggero eliminando i match più vecchi di 2 turni fa)
+CLEANUP_CALENDARIO_SQL = """
+    DELETE FROM calendario 
+    WHERE giornata < (
+        SELECT giornata_target - 2 
+        FROM parametri_leghe 
+        WHERE parametri_leghe.lega = calendario.lega
+    )
 """

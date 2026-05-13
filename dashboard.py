@@ -17,29 +17,52 @@ conn = st.connection("calcio_db", type="sql", url="sqlite:///calcio.db")
 @st.cache_data(ttl=3600, show_spinner=False)
 def genera_schedina_globale(leghe_disponibili):
     tutte_predizioni = []
-    with sqlite3.connect('calcio.db') as db:
-        for lega in leghe_disponibili:
-            # Recupero parametri ufficiali della lega
-            df_params = pd.read_sql("SELECT alpha, giornata_target FROM parametri_leghe WHERE lega = :l", db, params={"l": lega})
-            if df_params.empty: continue
-            
-            # FIX CHIAVE: Forziamo la conversione in tipi Python standard!
-            alpha_l = float(df_params['alpha'].iloc[0])
-            gt_l = int(df_params['giornata_target'].iloc[0]) 
-            
-            # Recupero dati per il motore e i soli match DA GIOCARE della Giornata Target
-            df_raw_l = pd.read_sql(query.MATCH_DATA_SQL, db, params={"lega": lega})
-            df_turno_l = pd.read_sql("SELECT * FROM calendario WHERE lega = :l AND giornata = :gt", db, params={"l": lega, "gt": gt_l})
-            
-            if not df_turno_l.empty:
-                for s in [2.5, 3.5]:
-                    p_res = stats_engine.calculate_predictions(df_raw_l, df_turno_l, s, alpha_l)
-                    if not p_res.empty:
-                        p_res['Lega'] = lega
-                        tutte_predizioni.append(p_res)
+    
+    # Usiamo la connessione in sola lettura per non bloccare il WAL mode!
+    with sqlite3.connect('file:calcio.db?mode=ro', uri=True) as db:
+        # BULK EXTRACTION: Facciamo solo 3 query totali per estrarre tutto
+        df_params_all = pd.read_sql("SELECT lega, alpha, giornata_target FROM parametri_leghe", db)
+        df_raw_all = pd.read_sql("SELECT lega, giornata, squadra_casa, squadra_trasferta, gol_casa, gol_trasferta FROM partite", db)
+        df_cal_all = pd.read_sql("SELECT lega, giornata, squadra_casa, squadra_trasferta FROM calendario", db)
+
+    # Filtraggio super-veloce in memoria (RAM) tramite Pandas
+    for lega in leghe_disponibili:
+        df_params = df_params_all[df_params_all['lega'] == lega]
+        if df_params.empty: continue
+        
+        alpha_l = float(df_params['alpha'].iloc[0])
+        gt_l = int(df_params['giornata_target'].iloc[0]) 
+        
+        df_raw_l = df_raw_all[df_raw_all['lega'] == lega]
+        df_turno_l = df_cal_all[(df_cal_all['lega'] == lega) & (df_cal_all['giornata'] == gt_l)]
+        
+        if not df_turno_l.empty:
+            for s in [2.5, 3.5]:
+                p_res = stats_engine.calculate_predictions(df_raw_l, df_turno_l, s, alpha_l)
+                if not p_res.empty:
+                    p_res['Lega'] = lega
+                    tutte_predizioni.append(p_res)
                             
     if not tutte_predizioni: return pd.DataFrame()
     return pd.concat(tutte_predizioni, ignore_index=True).sort_values(by="Prob %", ascending=False).head(10)
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def prepara_dati_lega(lega, usa_forma):
+    # 1. Recupero parametri
+    df_p = conn.query("SELECT alpha, giornata_target FROM parametri_leghe WHERE lega = :l", params={"l": lega}, ttl=3600)
+    alpha = float(df_p['alpha'].iloc[0]) if not df_p.empty and usa_forma else 0.0
+    gt = int(df_p['giornata_target'].iloc[0]) if not df_p.empty else 0
+    
+    # 2. Query dati massivi
+    df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": lega}, ttl=3600)
+    df_cal = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": lega}, ttl=3600)
+    
+    # 3. Filtraggi preparatori centralizzati (eseguiti 1 sola volta grazie alla cache)
+    df_rec = df_cal[df_cal['is_recupero'] == 1]
+    df_da_giocare = df_cal[(df_cal['is_recupero'] == 0) & (df_cal['match_status'] == 'SCHEDULED')]
+    df_turno_intero = df_cal[df_cal['is_recupero'] == 0]
+    
+    return alpha, gt, df_raw, df_rec, df_da_giocare, df_turno_intero
 
 # 2. CARICAMENTO DATI INIZIALI
 def query_leghe():
@@ -64,23 +87,15 @@ with st.container(border=True):
 
 st.divider()
 
-# --- RECUPERO DATI LEGA SELEZIONATA ---
-# Recuperiamo Alpha e GT dal DB
-df_p_lega = conn.query("SELECT alpha, giornata_target FROM parametri_leghe WHERE lega = :l", params={"l": global_lega}, ttl=3600)
-alpha_finale = df_p_lega['alpha'].iloc[0] if not df_p_lega.empty and forma else 0.0
-gt_lega = df_p_lega['giornata_target'].iloc[0] if not df_p_lega.empty else 0
-
-# Dati per il calendario e il motore
-df_raw = conn.query(query.MATCH_DATA_SQL, params={"lega": global_lega}, ttl=3600)
-df_cal_full = conn.query(query.CALENDARIO_DETTAGLIATO_SQL, params={"lega": global_lega}, ttl=3600)
+# --- RECUPERO E PREPARAZIONE DATI ---
+alpha_finale, gt_lega, df_raw, df_rec, df_da_giocare, df_turno_intero = prepara_dati_lega(global_lega, forma)
 
 # --- SEZIONE 1: PREVISIONI ---
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni </div>', unsafe_allow_html=True)
 
 with st.spinner("Analisi in corso..."):
-    if not df_cal_full.empty:
-        # A. Recuperi (Giornata < GT)
-        df_rec = df_cal_full[df_cal_full['is_recupero'] == 1]
+    if not df_rec.empty or not df_da_giocare.empty:
+        # A. Recuperi
         if not df_rec.empty:
             p_rec = stats_engine.calculate_predictions(df_raw, df_rec, global_soglia, alpha_finale)
             if not p_rec.empty:
@@ -88,37 +103,31 @@ with st.spinner("Analisi in corso..."):
                 st.html(ui_components.build_prediction_table(p_rec))
                 st.divider()
 
-        # B. Turno Principale (Giornata == GT, solo match da giocare)
-        # Filtriamo quelli che NON hanno 'FINISHED' in data_ora
-        df_std = df_cal_full[(df_cal_full['is_recupero'] == 0) & (df_cal_full['data_ora'] != 'FINISHED')]
-        if not df_std.empty:
-            p_std = stats_engine.calculate_predictions(df_raw, df_std, global_soglia, alpha_finale)
+        # B. Turno Principale (Solo match da giocare)
+        if not df_da_giocare.empty:
+            p_std = stats_engine.calculate_predictions(df_raw, df_da_giocare, global_soglia, alpha_finale)
             if not p_std.empty:
                 st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 GIORNATA {gt_lega}</div>', unsafe_allow_html=True)
                 st.html(ui_components.build_prediction_table(p_std))
-        else:
-            st.info("Tutti i match della giornata sono conclusi o non ancora disponibili.")
     else:
-        st.warning("Nessuna previsione disponibile.")
+        st.warning("Nessuna previsione disponibile per i match in arrivo.")
 
 st.divider()
 
-# --- SEZIONE 2: CALENDARIO (GAME CENTER) ---
+# --- SEZIONE 2: CALENDARIO E RISULTATI ---
 st.markdown('<div id="calendario" class="section-title-blue">📅 Calendario & Risultati</div>', unsafe_allow_html=True)
 
-if not df_cal_full.empty:
-    # A. Recuperi
-    df_c_rec = df_cal_full[df_cal_full['is_recupero'] == 1]
-    if not df_c_rec.empty:
-        st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 RECUPERI</div>', unsafe_allow_html=True)
-        st.html(ui_components.build_calendario(df_c_rec))
-        st.divider()
-    
-    # B. Giornata Target (Mostra tutto: finiti e da giocare)
-    df_c_std = df_cal_full[df_cal_full['is_recupero'] == 0]
-    if not df_c_std.empty:
-        st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 QUADRO GIORNATA {gt_lega}</div>', unsafe_allow_html=True)
-        st.html(ui_components.build_calendario(df_c_std))
+if not df_turno_intero.empty or not df_rec.empty:
+        # A. Recuperi
+        if not df_rec.empty:
+            st.markdown('<div style="color:#ed4245; font-weight:700; margin-bottom:10px;">🔄 RECUPERI</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_calendario(df_rec))
+            st.divider()
+        
+        # B. Giornata Target (Tutti i match)
+        if not df_turno_intero.empty:
+            st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 QUADRO GIORNATA {gt_lega}</div>', unsafe_allow_html=True)
+            st.html(ui_components.build_calendario(df_turno_intero))
 else:
     st.info("Calendario non disponibile.")
 

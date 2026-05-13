@@ -38,19 +38,19 @@ def build_calendario(df):
     rows = ""
     for _, r in df.iterrows():
         # --- LOGICA RISULTATO vs DATA ---
-        if r['data_ora'] == 'FINISHED':
-            # Se la partita è già conclusa (ricevuta dalla UNION in query.py)
+        if r['match_status'] == 'FINISHED':
+            # Controllo pulito sullo stato logico            # Se la partita è già conclusa (ricevuta dalla UNION in query.py)
             score_str = f"{int(r['gol_casa'])} - {int(r['gol_trasferta'])}"
             info_html = f"<span style='background:#2f3136; padding: 3px 8px; border-radius:4px; font-weight:bold; color:#1DB954;'>{score_str}</span>"
         else:
-            # Se la partita è da giocare
-            raw_date = str(r['data_ora'])[:16] 
-            if len(raw_date) == 16 and "T" in raw_date:
-                anno, mese, giorno = raw_date[0:4], raw_date[5:7], raw_date[8:10]
-                ora = raw_date[11:16]
-                dt_formatted = f"{giorno}/{mese}/{anno} {ora}"
-            else:
-                dt_formatted = raw_date.replace('T', ' ')
+            # Se la partita è da giocare, usiamo pandas per un parsing robusto
+            try:
+                dt_obj = pd.to_datetime(r['data_ora'])
+                dt_formatted = dt_obj.strftime("%d/%m/%Y %H:%M")
+            except:
+                # Fallback di sicurezza in caso di dati sporchi
+                dt_formatted = str(r['data_ora']).replace('T', ' ').replace('Z', '')
+            
             info_html = f"<span style='color:#8e9297;'>{dt_formatted}</span>"
 
         rows += (
@@ -85,7 +85,7 @@ def build_gol_table(df):
     for _, r in df.iterrows():
         rows += (
             f"<tr>"
-            f"<td><b>{r['squadra']}</b></td>"
+            f"<td style='text-align:left'><b>{r['squadra']}</b></td>"
             f"<td style='color:#1DB954; text-align:center'>{int(r['gfc'])}</td>"
             f"<td style='color:#ED4245; text-align:center'>{int(r['gsc'])}</td>"
             f"<td class='hide-mob' style='color:#1DB954; text-align:center'>{round(r['mgfc'], 2)}</td>"
@@ -99,53 +99,21 @@ def build_gol_table(df):
             f"</tr>"
         )
     
-    th_html = """
-        <th style='text-align:left;' onclick="srt(0,false)">Squadra</th>
-        <th style='color:#1DB954; text-align:center' onclick="srt(1,true)">GFC</th>
-        <th style='color:#ED4245; text-align:center' onclick="srt(2,true)">GSC</th>
-        <th class='hide-mob' style='color:#1DB954; text-align:center' onclick="srt(3,true)">Med GFC</th>
-        <th class='hide-mob' style='color:#ED4245; text-align:center' onclick="srt(4,true)">Med GSC</th>
-        <th style='color:#5865F2; text-align:center' onclick="srt(5,true)">GFT</th>
-        <th style='color:#FEE75C; text-align:center' onclick="srt(6,true)">GST</th>
-        <th class='hide-mob' style='color:#5865F2; text-align:center' onclick="srt(7,true)">Med GFT</th>
-        <th class='hide-mob' style='color:#FEE75C; text-align:center' onclick="srt(8,true)">Med GST</th>
-        <th style='text-align:center' onclick="srt(9,true)">Tot GF</th>
-        <th style='text-align:center' onclick="srt(10,true)">Tot GS</th>
-    """
-    
     return f"""
-    <div id="gol-table-container">
-    <style>
-      #gol-table-container .wrap {{ width:100%; overflow-x:auto; border-radius:8px; background:#181818; }}
-      #gol-table-container table {{ width:100%; border-collapse:collapse; white-space:nowrap; font-size:13px; table-layout:fixed; }}
-      #gol-table-container th, #gol-table-container td {{ word-break:break-word; }}
-      #gol-table-container th {{ background:#202225; padding:12px; border-bottom:2px solid #2f3136; cursor:pointer; user-select:none; }}
-      #gol-table-container td {{ padding:10px; border-bottom:1px solid #282828; color:#dcddde; }}
-      #gol-table-container tr:hover td {{ background:#2f3136; }}
-      @media screen and (max-width: 768px) {{
-        #gol-table-container .wrap {{ overflow-x:auto; -webkit-overflow-scrolling:touch; }}
-        #gol-table-container table {{ white-space:normal !important; table-layout:auto !important; }}
-      }}
-    </style>
-    <div class="wrap">
-      <table id="gol-tbl"><thead><tr>{th_html}</tr></thead><tbody>{rows}</tbody></table>
-    </div>
-    <script>
-    (function(){{
-      var d = {{}};
-      window.srt = function(col, num) {{
-        var tbl = document.getElementById('gol-tbl'), tbody = tbl.querySelector('tbody'),
-            rows = Array.from(tbody.querySelectorAll('tr'));
-        d[col] = !d[col]; var asc = d[col];
-        rows.sort(function(a, b){{
-          var va = a.cells[col].innerText.trim(), vb = b.cells[col].innerText.trim();
-          if(num){{ va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }}
-          return asc ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
-        }});
-        rows.forEach(function(r){{ tbody.appendChild(r); }});
-      }};
-    }})();
-    </script>
+    <div class="gol-table-wrap">
+      <table class="gol-table">
+        <thead>
+          <tr>
+            <th style='text-align:left;'>Squadra</th>
+            <th style='color:#1DB954;'>GFC</th><th style='color:#ED4245;'>GSC</th>
+            <th class='hide-mob' style='color:#1DB954;'>Med GFC</th><th class='hide-mob' style='color:#ED4245;'>Med GSC</th>
+            <th style='color:#5865F2;'>GFT</th><th style='color:#FEE75C;'>GST</th>
+            <th class='hide-mob' style='color:#5865F2;'>Med GFT</th><th class='hide-mob' style='color:#FEE75C;'>Med GST</th>
+            <th>Tot GF</th><th>Tot GS</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
     </div>
     """
 

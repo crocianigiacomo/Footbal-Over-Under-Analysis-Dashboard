@@ -3,6 +3,8 @@ import aiohttp
 import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
+from stats_engine import calibrate_alpha
+import query
 
 load_dotenv() 
 
@@ -32,11 +34,13 @@ def init_database(db_path='calcio.db'):
         giornata_target INTEGER,
         ultima_calibrazione TEXT)''')
     
-    # Salvavita: se la tabella esiste già dal tuo vecchio codice, aggiungiamo la colonna senza rompere nulla
-    try:
+    # Controllo esplicito della colonna giornata_target
+    cursor.execute("PRAGMA table_info(parametri_leghe)")
+    colonne = [info[1] for info in cursor.fetchall()]
+    
+    if 'giornata_target' not in colonne:
+        print("[DB] Migrazione: Aggiunta colonna giornata_target a parametri_leghe")
         cursor.execute("ALTER TABLE parametri_leghe ADD COLUMN giornata_target INTEGER DEFAULT 1")
-    except sqlite3.OperationalError:
-        pass # La colonna esiste già, andiamo avanti
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS partite (
         id INTEGER PRIMARY KEY AUTOINCREMENT, lega TEXT, giornata INTEGER,
@@ -205,11 +209,14 @@ async def main():
         
     if all_calendario_filtrato:
         final_cal = pd.concat(all_calendario_filtrato, ignore_index=True)
-        connection.execute("DELETE FROM calendario")
+
+        # 1. Inserisce le nuove partite o aggiorna le date (upsert)
         save_to_sqlite(final_cal, connection, 'calendario')
+        
+        # 2. Pulisce la tabella rimuovendo i vecchi match tramite query centralizzata
+        connection.execute(query.CLEANUP_CALENDARIO_SQL)
 
     print("[INFO] Calibrazione parametri Alpha e Aggiornamento GT...")
-    from stats_engine import calibrate_alpha
     
     cursor = connection.cursor()
     

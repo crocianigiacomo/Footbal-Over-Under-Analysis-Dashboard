@@ -18,33 +18,45 @@ def compute_weighted_strengths(df, alpha):
     avg_h = (df['gol_casa'] * df['w']).sum() / tot_w
     avg_a = (df['gol_trasferta'] * df['w']).sum() / tot_w
     
-    teams = sorted(set(df['squadra_casa']) | set(df['squadra_trasferta']))
-    records = []
-    for t in teams:
-        hm, am = df[df['squadra_casa']==t], df[df['squadra_trasferta']==t]
-        if hm['w'].sum() == 0 or am['w'].sum() == 0: continue
-        records.append({
-            'squadra': t,
-            'avg_gfc': (hm['gol_casa']*hm['w']).sum() / hm['w'].sum(),
-            'avg_gsc': (hm['gol_trasferta']*hm['w']).sum() / hm['w'].sum(),
-            'avg_gft': (am['gol_trasferta']*am['w']).sum() / am['w'].sum(),
-            'avg_gst': (am['gol_casa']*am['w']).sum() / am['w'].sum(),
-        })
-    return pd.DataFrame(records).set_index('squadra'), avg_h, avg_a
+    # Usiamo il GroupBy: operazione migliaia di volte più veloce del ciclo for
+    df['wgfc'] = df['gol_casa'] * df['w']
+    df['wgsc'] = df['gol_trasferta'] * df['w']
+    
+    # Aggreghiamo i dati per casa e trasferta separatamente
+    casa = df.groupby('squadra_casa').agg(sum_w_c=('w','sum'), sum_gfc=('wgfc','sum'), sum_gsc=('wgsc','sum'))
+    tras = df.groupby('squadra_trasferta').agg(sum_w_t=('w','sum'), sum_gft=('wgfc','sum'), sum_gst=('wgsc','sum')) # nota: wgfc qui sono i gol fatti in trasferta
+    
+    # Uniamo e calcoliamo le medie
+    res = casa.join(tras, how='inner')
+    res['avg_gfc'] = res['sum_gfc'] / res['sum_w_c']
+    res['avg_gsc'] = res['sum_gsc'] / res['sum_w_c']
+    res['avg_gft'] = res['sum_gft'] / res['sum_w_t']
+    res['avg_gst'] = res['sum_gst'] / res['sum_w_t']
+    
+    return res[['avg_gfc', 'avg_gsc', 'avg_gft', 'avg_gst']], avg_h, avg_a
 
 def estimate_rho(df, strengths, avg_h, avg_a, alpha):
     low = df[(df['gol_casa']<=1) & (df['gol_trasferta']<=1)].copy()
     if len(low) < 5: return -0.15
     max_g = df['giornata'].max()
+    # Convertiamo i dati in matrici/array prima del loop per evitare l'uso di loc/iterrows costanti
+    low_records = low.to_dict('records')
+    
     def neg_ll(rho):
         ll = 0.0
-        for _, r in low.iterrows():
+        for r in low_records:
             sh, sa = r['squadra_casa'], r['squadra_trasferta']
-            if sh not in strengths.index or sa not in strengths.index: continue
-            exph = strengths.loc[sh,'avg_gfc'] * strengths.loc[sa,'avg_gst'] / avg_a
-            expa = strengths.loc[sa,'avg_gft'] * strengths.loc[sh,'avg_gsc'] / avg_h
-            tau = dixon_coles_correction(int(r['gol_casa']), int(r['gol_trasferta']), exph, expa, rho)
-            ll += np.exp(-alpha*(max_g-r['giornata'])) * np.log(max(tau, 1e-9))
+            if sh in strengths.index and sa in strengths.index:
+                # Accesso rapido tramite .at o pre-calcolo
+                s_h = strengths.loc[sh]
+                s_a = strengths.loc[sa]
+                
+                exph = s_h['avg_gfc'] * s_a['avg_gst'] / avg_a
+                expa = s_a['avg_gft'] * s_h['avg_gsc'] / avg_h
+                
+                tau = dixon_coles_correction(int(r['gol_casa']), int(r['gol_trasferta']), exph, expa, rho)
+                weight = np.exp(-alpha * (max_g - r['giornata']))
+                ll += weight * np.log(max(tau, 1e-9))
         return -ll
     res = minimize_scalar(neg_ll, bounds=(-0.5, 0.1), method='bounded')
     return round(res.x, 4) if res.success else -0.15
@@ -68,14 +80,31 @@ def calculate_predictions(df_raw, df_next, soglia, alpha):
         exph = strengths.loc[h,'avg_gfc'] * strengths.loc[a,'avg_gst'] / avg_a
         expa = strengths.loc[a,'avg_gft'] * strengths.loc[h,'avg_gsc'] / avg_h
         
-        po, pu = 0.0, 0.0
-        for ih in range(10):
-            for ia in range(10):
-                p = poisson.pmf(ih, exph) * poisson.pmf(ia, expa) * dixon_coles_correction(ih, ia, exph, expa, rho)
-                if (ih+ia) > soglia: po += p
-                else: pu += p
+        # 1. Calcolo vettoriale delle probabilità di Poisson per i gol (0-9)
+        goals = np.arange(10)
+        prob_h = poisson.pmf(goals, exph)
+        prob_a = poisson.pmf(goals, expa)
+
+        # 2. Creazione matrice 10x10 tramite prodotto esterno (tutte le combinazioni di punteggio)
+        prob_matrix = np.outer(prob_h, prob_a)
+
+        # 3. Applicazione correzione Dixon-Coles (sui 4 casi specifici)
+        prob_matrix[0, 0] *= dixon_coles_correction(0, 0, exph, expa, rho)
+        prob_matrix[0, 1] *= dixon_coles_correction(0, 1, exph, expa, rho)
+        prob_matrix[1, 0] *= dixon_coles_correction(1, 0, exph, expa, rho)
+        prob_matrix[1, 1] *= dixon_coles_correction(1, 1, exph, expa, rho)
+
+        # 4. Calcolo Over/Under istantaneo tramite maschera di somma gol
+        goal_sums = np.add.outer(goals, goals)
+        po = prob_matrix[goal_sums > soglia].sum()
+        pu = prob_matrix[goal_sums <= soglia].sum()
         
-        prob = round((po/(po+pu))*100, 1) if po > pu else round((pu/(po+pu))*100, 1)
+        total_p = po + pu
+        if total_p > 0:
+            prob = round(float((max(po, pu) / total_p) * 100), 1)
+        else:
+            prob = 0.0
+            
         res_label = f"🔥 Over {soglia}" if po > pu else f"❄️ Under {soglia}"
         color = ("#FFBB00" if prob >= 65 else "#FFE9AB") if po > pu else ("#0080FF" if prob >= 65 else "#9ECEFF")
         
@@ -100,30 +129,24 @@ def calibrate_alpha(df_raw):
     def log_loss_objective(alpha_trial):
         total_log_loss = 0
         
-        for _, match in test_matches.iterrows():
-            # Calcolo le forze squadre usando solo i dati PRECEDENTI a questa partita
-            past_data = df_raw[df_raw['giornata'] < match['giornata']]
-            if past_data.empty: continue
-            
-            # Calcolo medie e forze con l'alpha in prova
-            try:
-                strengths, avg_h, avg_a = compute_weighted_strengths(past_data, alpha_trial)
-                h, a = match['squadra_casa'], match['squadra_trasferta']
-                
-                if h not in strengths.index or a not in strengths.index: continue
-                
-                exph = strengths.loc[h,'avg_gfc'] * strengths.loc[a,'avg_gst'] / avg_a
-                expa = strengths.loc[a,'avg_gft'] * strengths.loc[h,'avg_gsc'] / avg_h
-                
-                # Calcolo probabilità del risultato reale (es. 2-1)
-                prob_match = poisson.pmf(match['gol_casa'], exph) * poisson.pmf(match['gol_trasferta'], expa)
-                
-                # Log-Loss: aggiungo -log(probabilità) [min 1e-10 per evitare log(0)]
-                total_log_loss -= np.log(max(prob_match, 1e-10))
-            except (ValueError, KeyError, ZeroDivisionError):
-                continue
-                
-        return total_log_loss
+                # Calcoliamo le forze una volta sola per l'intero set di test (Hold-out)
+        train_data = df_raw[df_raw['giornata'] <= (max_g - 2)]
+        test_matches = df_raw[df_raw['giornata'] > (max_g - 2)]
+        
+        if train_data.empty or test_matches.empty: return 999
+        
+        strengths, avg_h, avg_a = compute_weighted_strengths(train_data, alpha_trial)
+        
+        # Calcolo vettorizzato della Log-Loss (senza iterrows se possibile, o ridotto)
+        total_ll = 0
+        for m in test_matches.to_dict('records'):
+            h, a = m['squadra_casa'], m['squadra_trasferta']
+            if h in strengths.index and a in strengths.index:
+                exph = strengths.at[h,'avg_gfc'] * strengths.at[a,'avg_gst'] / avg_a
+                expa = strengths.at[a,'avg_gft'] * strengths.at[h,'avg_gsc'] / avg_h
+                prob = poisson.pmf(m['gol_casa'], exph) * poisson.pmf(m['gol_trasferta'], expa)
+                total_ll -= np.log(max(prob, 1e-10))
+        return total_ll
 
     # Ottimizzazione tra 0.01 (molto stabile) e 0.30 (molto reattivo alla forma)
     res = minimize_scalar(log_loss_objective, bounds=(0.01, 0.30), method='bounded')
