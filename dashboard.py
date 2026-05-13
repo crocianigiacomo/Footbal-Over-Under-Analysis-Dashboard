@@ -19,19 +19,17 @@ def genera_schedina_globale(leghe_disponibili):
             df_cal_l = pd.read_sql(query.CALENDARIO_DETTAGLIATO_SQL, db, params={"lega": lega})
             
             if not df_cal_l.empty:
-                df_fut_l = df_cal_l[(pd.to_datetime(df_cal_l['data_ora'], utc=True) >= pd.Timestamp.now(tz='UTC')) & (df_cal_l['is_recupero'] == 0)]
+                # Estraiamo direttamente il turno corrente senza ulteriori filtri
+                df_turno_corrente = df_cal_l[(pd.to_datetime(df_cal_l['data_ora'], utc=True) >= pd.Timestamp.now(tz='UTC')) & (df_cal_l['is_recupero'] == 0)]
                 
-                # --- FIX: ISOLIAMO SOLO IL PROSSIMO TURNO ---
-                if not df_fut_l.empty:
-                    g_target = df_fut_l['giornata'].iloc[0] # Trova la prossima giornata giocabile
-                    df_turno_corrente = df_fut_l[df_fut_l['giornata'] == g_target] # Filtra solo quella
-                    
-                    # Calcoliamo per entrambe le soglie SOLO sul turno corrente
+                if not df_turno_corrente.empty:
+                    # Calcoliamo per entrambe le soglie
                     for s in [2.5, 3.5]:
                         p_res = stats_engine.calculate_predictions(df_raw_l, df_turno_corrente, s, alpha_l)
                         if not p_res.empty:
                             p_res['Lega'] = lega
                             tutte_predizioni.append(p_res)
+
                             
     if not tutte_predizioni:
         return pd.DataFrame()
@@ -101,16 +99,15 @@ with st.spinner("Analisi in corso..."):
                 st.divider()
                 mostrato = True
 
-        # Turno Standard
+                # Turno Standard
         df_std = df_fut[df_fut['is_recupero'] == 0]
         if not df_std.empty:
-            g_target = df_std['giornata'].iloc[0]
-            df_curr_p = df_std[df_std['giornata'] == g_target]
-            p_std = stats_engine.calculate_predictions(df_raw, df_curr_p, global_soglia, alpha_finale)
+            p_std = stats_engine.calculate_predictions(df_raw, df_std, global_soglia, alpha_finale)
             if not p_std.empty:
                 st.markdown(f'<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 TURNO PRINCIPALE</div>', unsafe_allow_html=True)
                 st.html(ui_components.build_prediction_table(p_std))
                 mostrato = True
+
     
     if not mostrato: st.warning("Nessuna previsione disponibile.")
     st.markdown(f"<div style='text-align:right; font-size:0.7rem; color:#8e9297;'>Alpha: {alpha_finale}</div>", unsafe_allow_html=True)
@@ -130,12 +127,12 @@ if not df_cal.empty:
         st.html(ui_components.build_calendario(df_c_rec))
         st.divider()
     
-    # Turno Standard (Rimosso il numero giornata tra parentesi)
+        # Turno Standard
     df_c_std = df_viva[df_viva['is_recupero'] == 0]
     if not df_c_std.empty:
-        g_c = df_c_std['giornata'].iloc[0]
         st.markdown('<div style="color:#5865F2; font-weight:700; margin-bottom:10px;">📌 PROSSIMO TURNO</div>', unsafe_allow_html=True)
-        st.html(ui_components.build_calendario(df_c_std[df_c_std['giornata'] == g_c]))
+        st.html(ui_components.build_calendario(df_c_std))
+
 else:
     st.info("Calendario non disponibile.")
 
