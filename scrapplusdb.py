@@ -193,6 +193,49 @@ async def main():
         
     if all_calendario:
         final_cal = pd.concat(all_calendario, ignore_index=True)
+    if all_calendario:
+        final_cal = pd.concat(all_calendario, ignore_index=True)
+        
+        # ── NUOVA LOGICA AVANZATA DI TRANSIZIONE TURNO ──
+        filtered_list = []
+        now = pd.Timestamp.now(tz='UTC')
+        
+        for lega, group in final_cal.groupby('lega'):
+            counts = group['giornata'].value_counts()
+            
+            # 1. Identifichiamo i turni "pieni" (quelli non ancora iniziati o appena sfiorati)
+            giornate_piene = counts[counts > 5].index
+            
+            if len(giornate_piene) > 0:
+                first_full = giornate_piene.min()
+                
+                # 2. Controlliamo se il turno precedente è ancora in corso (posticipi)
+                if (first_full - 1) in counts.index:
+                    # Verifichiamo QUANDO si giocano le partite rimanenti
+                    date_rimanenti = pd.to_datetime(group[group['giornata'] == (first_full - 1)]['data_ora'], utc=True)
+                    
+                    # Se si giocano a breve (es. domenica/lunedì), congeliamo la dashboard su questo turno
+                    if date_rimanenti.min() <= now + pd.Timedelta(days=4):
+                        giornata_principale = first_full - 1
+                    else:
+                        # Se sono rinvii a lungo termine (es. Supercoppa), passiamo al turno nuovo
+                        giornata_principale = first_full
+                else:
+                    giornata_principale = first_full
+            else:
+                # Fallback di sicurezza per la fine del campionato
+                giornata_principale = group['giornata'].max()
+                
+            # 3. Manteniamo il turno in corso e qualsiasi recupero precedente
+            mask = group['giornata'] <= giornata_principale
+            filtered_list.append(group[mask])
+        
+        final_cal_pulito = pd.concat(filtered_list, ignore_index=True)
+        
+        # Salvataggio pulito su database
+        connection.execute("DELETE FROM calendario")
+        save_to_sqlite(final_cal_pulito, connection, 'calendario')
+
         connection.execute("DELETE FROM calendario")
         save_to_sqlite(final_cal, connection, 'calendario')
 
