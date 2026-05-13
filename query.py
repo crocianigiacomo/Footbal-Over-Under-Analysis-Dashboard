@@ -1,4 +1,4 @@
-# TOP OVER GLOBALE 
+# TOP OVER GLOBALE (Resta invariata, ottima per i ranking)
 TOP_OVER_SQL = """
     WITH ps AS (
         SELECT lega, squadra_casa AS squadra,
@@ -16,7 +16,7 @@ TOP_OVER_SQL = """
     ORDER BY pct DESC LIMIT :limit
 """
 
-# TOP UNDER GLOBALE 
+# TOP UNDER GLOBALE (Resta invariata)
 TOP_UNDER_SQL = """
     WITH ps AS (
         SELECT lega, squadra_casa AS squadra,
@@ -57,25 +57,41 @@ GOL_LEGA_SQL = """
     ORDER BY totgf DESC
 """
 
+# ── NUOVA LOGICA CALENDARIO E TARGET ──
 CALENDARIO_DETTAGLIATO_SQL = """
-    WITH GiornataPrincipale AS (
-        -- Ora la giornata principale è semplicemente l'ultima caricata dallo scraper
-        SELECT MAX(giornata) AS giornata 
-        FROM calendario 
-        WHERE lega = :lega 
+    WITH Target AS (
+        -- Recuperiamo la GT ufficiale salvata dallo scraper
+        SELECT giornata_target FROM parametri_leghe WHERE lega = :lega
     )
+    -- 1. Match futuri dal calendario (Recuperi < GT e Prossimi Match == GT)
     SELECT 
         giornata, squadra_casa, squadra_trasferta, data_ora,
-        CASE 
-            WHEN giornata < (SELECT giornata FROM GiornataPrincipale) THEN 1 
-            ELSE 0 
-        END AS is_recupero
+        NULL as gol_casa, NULL as gol_trasferta,
+        CASE WHEN giornata < (SELECT giornata_target FROM Target) THEN 1 ELSE 0 END AS is_recupero
     FROM calendario
     WHERE lega = :lega
-    ORDER BY data_ora ASC
+    
+    UNION ALL
+
+    -- 2. Match già conclusi della Giornata Target (per completare il quadro visivo)
+    SELECT 
+        giornata, squadra_casa, squadra_trasferta, 'FINISHED' as data_ora,
+        gol_casa, gol_trasferta,
+        0 AS is_recupero
+    FROM partite
+    WHERE lega = :lega AND giornata = (SELECT giornata_target FROM Target)
+    
+    ORDER BY is_recupero DESC, data_ora ASC
 """
 
-# Dati grezzi per calcolo pesi temporali e stima rho in Python
+# Query per i risultati recenti (Game Center)
+ULTIMI_RISULTATI_SQL = """
+    SELECT giornata, squadra_casa, squadra_trasferta, gol_casa, gol_trasferta
+    FROM partite
+    WHERE lega = :lega
+    ORDER BY id DESC LIMIT 10
+"""
+
 MATCH_DATA_SQL = """
     SELECT giornata, squadra_casa, squadra_trasferta,
            gol_casa, gol_trasferta
