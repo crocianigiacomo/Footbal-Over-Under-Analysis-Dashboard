@@ -102,12 +102,14 @@ MATCH_DATA_SQL = """
     ORDER BY giornata ASC
 """
 
-# PULIZIA CALENDARIO (Mantiene il DB leggero eliminando i match più vecchi di 2 turni fa)
+# PULIZIA CALENDARIO
 CLEANUP_CALENDARIO_SQL = """
     DELETE FROM calendario 
-    WHERE giornata < (
-        SELECT giornata_target - 2 
-        FROM parametri_leghe 
-        WHERE parametri_leghe.lega = calendario.lega
+    WHERE EXIST (
+        SELECT 1 FROM partite p
+        WHERE p.lega = calendario.lega
+          AND p.squadra_casa = calendario.squadra_casa
+          AND p.squadra_trasferta = calendario.squadra_trasferta
+          AND p.giornata = calendario.giornata
     )
 """
