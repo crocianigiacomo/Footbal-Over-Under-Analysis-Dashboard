@@ -71,9 +71,6 @@ CALENDARIO_DETTAGLIATO_SQL = """
         'SCHEDULED' as match_status
     FROM calendario c
     WHERE c.lega = :lega
-      AND NOT EXISTS (
-          SELECT 1 FROM partite p 
-          WHERE p.lega = c.lega
     
     UNION ALL
 
