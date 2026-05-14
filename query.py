@@ -63,14 +63,17 @@ CALENDARIO_DETTAGLIATO_SQL = """
         -- Recuperiamo la GT ufficiale salvata dallo scraper
         SELECT giornata_target FROM parametri_leghe WHERE lega = :lega
     )
-    -- 1. Match futuri dal calendario (Recuperi < GT e Prossimi Match == GT)
+    -- 1. Match dal calendario (solo se non ancora presenti in 'partite')
     SELECT 
-        giornata, squadra_casa, squadra_trasferta, data_ora,
+        c.giornata, c.squadra_casa, c.squadra_trasferta, c.data_ora,
         NULL as gol_casa, NULL as gol_trasferta,
-        CASE WHEN giornata < (SELECT giornata_target FROM Target) THEN 1 ELSE 0 END AS is_recupero,
+        CASE WHEN c.giornata < (SELECT giornata_target FROM Target) THEN 1 ELSE 0 END AS is_recupero,
         'SCHEDULED' as match_status
-    FROM calendario
-    WHERE lega = :lega
+    FROM calendario c
+    WHERE c.lega = :lega
+      AND NOT EXISTS (
+          SELECT 1 FROM partite p 
+          WHERE p.lega = c.lega
     
     UNION ALL
 
@@ -104,8 +107,8 @@ MATCH_DATA_SQL = """
 
 # PULIZIA CALENDARIO
 CLEANUP_CALENDARIO_SQL = """
-    DELETE FROM calendario 
-    WHERE EXIST (
+    DELETE FROM calendario
+    WHERE EXISTS (
         SELECT 1 FROM partite p
         WHERE p.lega = calendario.lega
           AND p.squadra_casa = calendario.squadra_casa
