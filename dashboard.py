@@ -4,6 +4,13 @@ import sqlite3
 import query
 import stats_engine
 import ui_components
+import os
+
+# --- TRIGGER AGGIORNAMENTO DB ---
+try:
+    db_last_update = os.path.getmtime('calcio.db')
+except FileNotFoundError:
+    db_last_update = 0
 
 # 1. CONFIGURAZIONE
 st.set_page_config(page_title="XG Football Analytics", layout="wide", initial_sidebar_state="collapsed")
@@ -14,8 +21,8 @@ with open('style.css') as f:
 conn = st.connection("calcio_db", type="sql", url="sqlite:///calcio.db")
 
 # --- FUNZIONE AGGREGATRICE IN CACHE PER LA SCHEDINA ---
-@st.cache_data(ttl=3600, show_spinner=False)
-def genera_schedina_globale(leghe_disponibili):
+@st.cache_data(ttl=86400, show_spinner=False)
+def genera_schedina_globale(leghe_disponibili, update_trigger):
     tutte_predizioni = []
     
     # Usiamo la connessione in sola lettura per non bloccare il WAL mode!
@@ -46,8 +53,8 @@ def genera_schedina_globale(leghe_disponibili):
     if not tutte_predizioni: return pd.DataFrame()
     return pd.concat(tutte_predizioni, ignore_index=True).sort_values(by="Prob %", ascending=False).head(10)
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def prepara_dati_lega(lega, usa_forma):
+@st.cache_data(ttl=86400, show_spinner=False)
+def prepara_dati_lega(lega, usa_forma, update_trigger):
     # 1. Recupero parametri
     df_p = conn.query("SELECT alpha, giornata_target FROM parametri_leghe WHERE lega = :l", params={"l": lega}, ttl=3600)
     alpha = float(df_p['alpha'].iloc[0]) if not df_p.empty and usa_forma else 0.0
@@ -88,7 +95,7 @@ with st.container(border=True):
 st.divider()
 
 # --- RECUPERO E PREPARAZIONE DATI ---
-alpha_finale, gt_lega, df_raw, df_rec, df_da_giocare, df_turno_intero = prepara_dati_lega(global_lega, forma)
+alpha_finale, gt_lega, df_raw, df_rec, df_da_giocare, df_turno_intero = prepara_dati_lega(global_lega, forma, db_last_update)
 
 # --- SEZIONE 1: PREVISIONI ---
 st.markdown('<div id="previsioni" class="section-title-red">🔮 Previsioni </div>', unsafe_allow_html=True)
@@ -154,7 +161,7 @@ st.html(ui_components.build_gol_table(df_g))
 st.divider()
 st.markdown('<div id="schedina" class="section-title-red">🎟️ Schedina della Settimana </div>', unsafe_allow_html=True)
 with st.spinner("Estrazione Top 10 globale in corso..."):
-    df_top_10 = genera_schedina_globale(leghe_disp)
+    df_top_10 = genera_schedina_globale(leghe_disp, db_last_update)
     if not df_top_10.empty:
         st.html(ui_components.build_betting_slip(df_top_10))
     else:
